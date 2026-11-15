@@ -1,0 +1,114 @@
+:root {
+  --fondo: #fafaf9;
+  --superficie: #ffffff;
+  --texto: #1c1917;
+  --suave: #57534e;
+  --borde: #d6d3d1;
+  --acierto: #15803d;
+  --fallo: #b91c1c;
+  --principal: #1c1917;
+  --sobre-principal: #ffffff;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #1c1917;
+    --superficie: #292524;
+    --texto: #f5f5f4;
+    --suave: #a8a29e;
+    --borde: #44403c;
+    --acierto: #4ade80;
+    --fallo: #f87171;
+    --principal: #f5f5f4;
+    --sobre-principal: #1c1917;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font: 17px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+header, main {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+header { padding-top: 16px; padding-bottom: 8px; }
+header a { color: var(--texto); font-weight: 600; text-decoration: none; }
+
+fieldset {
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  margin: 0 0 12px;
+  padding: 8px 12px 12px;
+}
+
+legend { font-weight: 600; padding: 0 4px; }
+
+label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+
+input { width: 20px; height: 20px; margin: 0; accent-color: var(--principal); }
+
+.modos label { display: inline-flex; margin-right: 20px; }
+
+.contador { font-size: 1.1rem; font-weight: 600; }
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+button {
+  flex: 1 1 10rem;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  cursor: pointer;
+}
+
+button.principal { background: var(--principal); border-color: var(--principal); color: var(--sobre-principal); }
+button.acierto { border: 2px solid var(--acierto); color: var(--acierto); font-weight: 600; }
+button.fallo { border: 2px solid var(--fallo); color: var(--fallo); font-weight: 600; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--suave); outline-offset: 2px; }
+
+.tarjeta {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 8px;
+}
+
+.referencia { color: var(--suave); font-size: 0.9rem; margin: 0 0 8px; }
+.tarjeta h2 { font-size: 1.25rem; line-height: 1.35; margin: 0 0 12px; }
+.revelado { border-top: 1px solid var(--borde); margin-top: 12px; }
+.revelado:empty { display: none; }
+.paso h3 { font-size: 1rem; color: var(--suave); margin: 12px 0 4px; }
+.pie { color: var(--suave); font-size: 0.85rem; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 8px 0 0; }
+.editar { color: var(--suave); }
+.aviso { color: var(--suave); }
+
+.md { overflow-wrap: anywhere; }
+.md table { border-collapse: collapse; display: block; overflow-x: auto; margin: 8px 0; }
+.md th, .md td { border: 1px solid var(--borde); padding: 4px 8px; text-align: left; }
+.md pre { overflow-x: auto; background: var(--fondo); padding: 8px; border-radius: 6px; }
+.md code { font-size: 0.9em; }
+.katex-display { overflow-x: auto; overflow-y: hidden; }

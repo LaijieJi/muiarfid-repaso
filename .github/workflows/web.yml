@@ -1,0 +1,51 @@
+name: web
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Tests del validador
+        run: python -m unittest discover -s scripts
+      - name: Tests de la web
+        run: node --test "web/*.test.js"
+      - name: Validar el contenido y generar tarjetas.json
+        run: python scripts/construir.py
+      - if: github.event_name == 'push'
+        uses: actions/configure-pages@v5
+      - if: github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+  desplegar:
+    needs: construir
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # Solo el despliegue se serializa, para que un PR nunca cancele una publicación pendiente.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - id: despliegue
+        uses: actions/deploy-pages@v4
