@@ -1,3 +1,5 @@
 web/tarjetas.json
 .superpowers/
 __pycache__/
+.impeccable/mocks/
+.impeccable/review/
