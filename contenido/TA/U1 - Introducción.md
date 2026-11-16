@@ -111,14 +111,16 @@ $$P(x, y) = P(y \mid x)\,P(x)$$
 #### Paso 2
 Igual que en el generativo, $P(x)$ no depende de $y$ y sale del argmax:
 
-$$\arg\max_y P(y \mid x)\,P(x) = \arg\max_y P(y \mid x)$$
+$$\begin{aligned}&\arg\max_y P(y \mid x)\,P(x) \\ &= \arg\max_y P(y \mid x)\end{aligned}$$
 
 ### Problema: elige la traducción de «el perro negro» con el enfoque generativo
 Candidatas: $y_1$ = «the black dog» y $y_2$ = «the dog black». El modelo de traducción no tiene en cuenta el orden de las palabras y da $P(x \mid y_1) = P(x \mid y_2) = 0{,}05$. El modelo de lenguaje da $P(y_1) = 2 \cdot 10^{-5}$ y $P(y_2) = 4 \cdot 10^{-9}$.
 #### Paso 1
 Se calcula el producto $P(x \mid y)\,P(y)$ de cada candidata:
 
-$$y_1: 0{,}05 \cdot 2 \cdot 10^{-5} = 10^{-6} \qquad y_2: 0{,}05 \cdot 4 \cdot 10^{-9} = 2 \cdot 10^{-10}$$
+$$y_1: 0{,}05 \cdot 2 \cdot 10^{-5} = 10^{-6}$$
+
+$$y_2: 0{,}05 \cdot 4 \cdot 10^{-9} = 2 \cdot 10^{-10}$$
 
 #### Paso 2
 Gana $y_1$, por un factor de 5000. El modelo de traducción empata y es el modelo de lenguaje, que mide la fluidez, el que decide.
