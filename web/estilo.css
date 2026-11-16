@@ -9,7 +9,7 @@
   --filete: #dcdfe3;
   --principal: #15181c;
   --sobre-principal: #ffffff;
-  --foco: #2a62c9;
+  --foco: #15181c;
   --sombra: 0 1px 2px rgb(21 24 28 / 0.06), 0 8px 24px -12px rgb(21 24 28 / 0.18);
   --trazo: 7px;
   --radio: 14px;
@@ -28,7 +28,7 @@
     --filete: #2b3036;
     --principal: #eef0f2;
     --sobre-principal: #101215;
-    --foco: #7aa2f0;
+    --foco: #eef0f2;
     --sombra: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.6);
   }
 }
