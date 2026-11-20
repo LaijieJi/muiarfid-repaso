@@ -20,9 +20,9 @@ Software 1.0 es el código escrito a mano, el 2.0 son los pesos de una red entre
 Es una distribución de probabilidad sobre las secuencias de palabras (o de tokens) de un idioma.
 
 ### ¿Qué midió Shannon en 1951 con su experimento de adivinar la siguiente letra?
-Estimó la entropía condicional del inglés, es decir, cuánta incertidumbre queda sobre una letra dadas las $n-1$ anteriores. Con $F_n$ la entropía con $n-1$ letras de contexto, obtuvo $F_0 = \log_2 26 \approx 4{,}7$ bits, $F_1 = 4{,}14$, $F_2 = 3{,}56$ y $F_3 = 3{,}31$.
+Estimó la entropía condicional del inglés, es decir, cuánta incertidumbre queda sobre una letra dadas las $n-1$ anteriores. Con $F_n$ ($n \geq 1$) la entropía de la letra siguiente dadas $n-1$ letras anteriores, y $F_0$ el caso sin información (26 letras equiprobables), obtuvo $F_0 = \log_2 26 \approx 4{,}7$ bits, $F_1 = 4{,}14$, $F_2 = 3{,}56$ y $F_3 = 3{,}3$.
 
-### ¿Qué enseñan los valores $F_0 > F_1 > F_2 > F_3$ de Shannon?
+### ¿Qué conclusión se saca de que la entropía de la siguiente letra en inglés baje de 4,7 a 4,14, 3,56 y 3,3 bits al ampliar el contexto?
 Que cuanto más contexto se conoce, menos incertidumbre queda sobre la siguiente letra. Es la motivación de los modelos de lenguaje con contexto.
 
 ### ¿Cómo aproxima un modelo de $n$-gramas la probabilidad de una secuencia?
@@ -36,7 +36,7 @@ Unigrama: $p(x_1)\,p(x_2)\cdots p(x_N)$. Bigrama: $p(x_1)\,p(x_2 \mid x_1)\cdots
 ### ¿Para qué sirven los símbolos de inicio y de fin en un modelo de $n$-gramas?
 Se añaden $n-1$ símbolos `<s>` al principio para poder modelar las primeras palabras de la frase. El símbolo `</s>` al final hace que el modelo asigne probabilidad a que la frase termine, de modo que suma uno sobre todas las frases.
 
-### ¿Qué ocurre si el modelo no usa símbolo final `</s>`?
+### ¿Qué ocurre si un modelo de $n$-gramas no usa símbolo final `</s>`?
 Hace falta un modelo de lenguaje distinto para cada longitud de frase, porque nada indica cuándo parar.
 
 ### ¿Cuál es la fórmula de la perplejidad (perplexity) de una secuencia?
@@ -56,11 +56,14 @@ $$H(x_{1:N}) = -\frac{1}{N}\sum_i \log p(x_i \mid \cdot) = \log \text{PPL}(x_{1:
 
 Con $\log_2$ se mide en bits y con $\ln$ en nats.
 
-### ¿Qué perplejidad y qué entropía tiene un modelo con perplejidad mínima?
+### ¿Cómo se pasa de la entropía a la perplejidad?
+Es la exponencial de la entropía en la base del logaritmo usado. Con bits, $\text{PPL} = 2^{H}$. Con nats, $\text{PPL} = e^{H}$. Por ejemplo, $H = 3$ bits equivale a $\text{PPL} = 8$.
+
+### ¿Qué perplejidad y entropía tiene un modelo de lenguaje que concentra toda la probabilidad en una sola frase?
 Un modelo que concentra toda la probabilidad en una sola frase $x_{1:N}$ asigna probabilidad 1 a cada palabra. Su perplejidad es $1^{-1/N} = 1$ y su entropía es 0, porque no necesita información extra para saber la palabra siguiente.
 
-### ¿Qué perplejidad y qué entropía tiene un modelo con perplejidad máxima?
-El que reparte la probabilidad por igual entre las $V$ palabras del vocabulario. Su perplejidad es $V$ aunque cambie la longitud $N$, y su entropía es $\log V$, que son los nats (o bits con $\log_2$) de información extra que necesita para determinar cada palabra.
+### ¿Qué perplejidad y qué entropía tiene un modelo uniforme sobre $V$ palabras?
+El que reparte la probabilidad por igual entre las $V$ palabras del vocabulario. Su perplejidad es $V$ aunque cambie la longitud $N$, y su entropía es $\log V$, que son los nats (o bits con $\log_2$) de información extra que necesita para determinar cada palabra. Es la perplejidad de un modelo que no sabe nada del texto, la referencia con la que se comparan los demás.
 
 ### Un modelo uniforme sobre un vocabulario de 8 palabras, ¿qué perplejidad y qué entropía en bits tiene?
 Cada palabra tiene probabilidad $1/8$, así que $\text{PPL} = (1/8)^{-1} = 8$ y $H = \log_2 8 = 3$ bits por palabra.
@@ -88,17 +91,17 @@ $$p(x_i \mid x_{i-(n-1):i-1}) = \text{Softmax}(\text{FFN}(X) W_3 + \text{vec}(WE
 
 con $W_3 \in \mathbb{R}^{d_{ff} \times V}$, $W_4 \in \mathbb{R}^{(n-1)d_{model} \times V}$ y $b \in \mathbb{R}^V$.
 
-### ¿Qué aporta el término $\text{vec}(WE(X))\,W_4$ en la salida del FNN LM?
+### ¿Qué aporta el término $\text{vec}(WE(X))\,W_4$ en la salida del FNN LM de 2003?
 Es una conexión directa (residual) que lleva los embeddings a la capa de salida sin pasar por la capa oculta. De este modo el softmax recibe la salida de la FFN y los embeddings a la vez.
 
 ### ¿Qué ventaja tiene el FNN LM sobre un modelo de $n$-gramas con el mismo contexto?
-Sus parámetros crecen de forma lineal con el contexto, $(n-1)\,d_{model}$, y no como $V^n$. Además los embeddings densos permiten que palabras parecidas reciban probabilidades parecidas.
+Sus parámetros crecen de forma lineal con el contexto (las matrices $W_2$ y $W_4$ escalan con $(n-1)\,d_{model}$), no como $V^n$. Además los embeddings densos permiten que palabras parecidas reciban probabilidades parecidas.
 
 ### ¿Cómo se puede usar un Transformer como modelo de lenguaje?
 El decodificador de un Transformer, con atención enmascarada, se usa directamente como modelo de lenguaje causal.
 
 ### Problema: calcula la perplejidad y la entropía de una frase con un modelo de bigramas
-Un modelo de bigramas tiene $p(a \mid \langle s\rangle) = 0{,}6$ y $p(b \mid \langle s\rangle) = 0{,}4$. Tras $a$: $p(a \mid a) = 0{,}5$, $p(b \mid a) = 0{,}3$ y $p(\langle /s\rangle \mid a) = 0{,}2$. Tras $b$: $p(a \mid b) = 0{,}25$, $p(b \mid b) = 0{,}25$ y $p(\langle /s\rangle \mid b) = 0{,}5$. Calcula la perplejidad y la entropía en bits de la frase $b\,a\,b$.
+Un modelo de bigramas tiene $p(a \mid \langle s\rangle) = 0{,}6$ y $p(b \mid \langle s\rangle) = 0{,}4$. Tras $a$: $p(a \mid a) = 0{,}5$, $p(b \mid a) = 0{,}3$ y $p(\langle /s\rangle \mid a) = 0{,}2$. Tras $b$: $p(a \mid b) = 0{,}25$, $p(b \mid b) = 0{,}25$ y $p(\langle /s\rangle \mid b) = 0{,}5$. Calcula la perplejidad y la entropía en bits de la frase $b\,a\,b$. Cuenta el símbolo final $\langle /s\rangle$ en $N$.
 #### Paso 1
 La frase con símbolo final es $b\,a\,b\,\langle /s\rangle$, así que $N = 4$. La probabilidad es el producto de bigramas:
 
@@ -128,10 +131,10 @@ GPT usa solo decodificador (decoder-only), BERT solo codificador (encoder-only) 
 |---|---|---|---|
 | GPT-1 | OpenAI, 2018 | solo decodificador | predecir el siguiente token en secuencias largas |
 | BERT | Google, 2018 | solo codificador | masked LM y next sentence prediction |
-| T5 | Google, 2019 | codificador y decodificador | masked LM y ajuste text-to-text |
+| T5 | Google, 2019 | codificador y decodificador | masked LM |
 
 ### ¿Qué idea introdujo GPT-1 (Generative Pre-Training)?
-Preentrenar un decodificador con secuencias largas de texto, para aprender de información lejana, y después ajustarlo (fine-tuning) a tareas como clasificación, continuación, similitud y opción múltiple.
+Preentrenar un decodificador con secuencias largas de texto, para aprender de información lejana, y después ajustarlo (fine-tuning) a tareas como clasificación, implicación textual (entailment), similitud y opción múltiple.
 
 ### ¿Con qué dos tareas se preentrena BERT?
 Con el modelo de lenguaje enmascarado (masked LM, MLM) y la predicción de la siguiente frase (next sentence prediction, NSP).
@@ -181,9 +184,9 @@ ChatGPT es una versión refinada de InstructGPT: parte del mismo modelo y usa un
 ### Problema: calcula el cómputo de entrenamiento de GPT-3 175B
 El modelo tiene $N = 175 \cdot 10^9$ parámetros y se entrena con $D = 300 \cdot 10^9$ tokens. Usa 6 FLOP por parámetro y por token. Calcula los FLOP totales, los PetaFLOP/s-días y los días que tardaría un clúster que sostuviera $10^{17}$ FLOP/s en total.
 #### Paso 1
-$C = 6 \cdot 175 \cdot 10^9 \cdot 300 \cdot 10^9 = 3{,}15 \cdot 10^{23}$ FLOP, que coincide con el valor de la tabla del modelo, unos $3{,}14 \cdot 10^{23}$.
+$C = 6 \cdot 175 \cdot 10^9 \cdot 300 \cdot 10^9 = 3{,}15 \cdot 10^{23}$ FLOP, que se acerca al valor de la tabla del modelo, $3{,}14 \cdot 10^{23}$, calculado con 174,6B parámetros.
 #### Paso 2
-Un PetaFLOP/s-día son $10^{15} \cdot 86\,400 = 8{,}64 \cdot 10^{19}$ FLOP. Por tanto $C = 3{,}15 \cdot 10^{23} / 8{,}64 \cdot 10^{19} \approx 3646$ PetaFLOP/s-días, que es el $3{,}64 \cdot 10^3$ de la tabla.
+Un PetaFLOP/s-día son $10^{15} \cdot 86\,400 = 8{,}64 \cdot 10^{19}$ FLOP. Por tanto $C = 3{,}15 \cdot 10^{23} / 8{,}64 \cdot 10^{19} \approx 3646$ PetaFLOP/s-días. La tabla da $3{,}64 \cdot 10^3$ porque usa 174,6B parámetros: $6 \cdot 174{,}6 \cdot 10^9 \cdot 300 \cdot 10^9 = 3{,}14 \cdot 10^{23}$.
 #### Paso 3
 Con $10^{17}$ FLOP/s sostenidos hacen falta $3{,}15 \cdot 10^{23} / 10^{17} = 3{,}15 \cdot 10^6$ segundos, es decir, $3{,}15 \cdot 10^6 / 86\,400 \approx 36{,}5$ días.
 
@@ -194,7 +197,7 @@ Comprobación de las cabezas: $96 \cdot 128 = 12\,288 = d_{model}$, así que $W_
 #### Paso 2
 Atención: $4\,d_{model}^2$. Red feed-forward con $d_{ff} = 4\,d_{model}$: $2 \cdot d_{model} \cdot 4\,d_{model} = 8\,d_{model}^2$. Una capa tiene $12\,d_{model}^2$ parámetros.
 #### Paso 3
-Con 96 capas: $12 \cdot 96 \cdot 12\,288^2 = 173\,946\,175\,488 \approx 174 \cdot 10^9$, muy cerca de los 175B nominales. La pequeña diferencia son los embeddings y los sesgos.
+Con 96 capas: $12 \cdot 96 \cdot 12\,288^2 = 173\,946\,175\,488 \approx 173{,}9 \cdot 10^9$. La tabla de la transparencia da 174 600 M. La diferencia son sobre todo los embeddings (unos $0{,}64 \cdot 10^9$) y, en mucho menor medida, los sesgos y las normalizaciones.
 
 ### Problema: aplica la ley de potencias del cómputo
 Con $L = 2{,}57 \cdot C^{-0{,}048}$ ($C$ en PetaFLOP/s-días), calcula la pérdida para $C = 3640$, el factor en que cae $L$ al multiplicar el cómputo por 10 y el factor de cómputo necesario para dividir la pérdida por 2.
@@ -219,13 +222,13 @@ Primero, adquirir y filtrar (limpiar) el texto, por ejemplo quitando duplicados 
 ### ¿Cómo se tokeniza un texto nuevo con un BPE ya entrenado?
 Se parte de los caracteres y se aplican las reglas de fusión en el mismo orden en que se aprendieron, no se busca el token más largo posible.
 
-### ¿Qué conjunto de datos de preentrenamiento muestra la clase como ejemplo?
+### ¿Qué es FineWeb2?
 FineWeb2, con unos 20 TB de documentos en más de 1000 idiomas.
 
-### ¿Qué tendencia tienen los datos de preentrenamiento de los modelos recientes?
+### ¿Qué tamaño de datos de preentrenamiento tienen los modelos publicados desde 2022 y cómo evoluciona?
 Son decenas de billones de datos ($10^{12}$ cada billón) y la tendencia es creciente.
 
-### ¿Qué coste de preentrenamiento tienen los modelos recientes?
+### ¿Qué coste de preentrenamiento tienen los modelos publicados desde 2022?
 Entre $10^{19}$ y $10^{27}$ FLOP, con tendencia creciente.
 
 ### Problema: aprende un vocabulario BPE y tokeniza un texto nuevo
@@ -288,7 +291,7 @@ Los benchmarks puntúan modelos con tareas y métricas fijas, mientras que las a
 Es una familia de técnicas que adaptan un LLM a una tarea sin actualizar los parámetros del modelo base: se añade un conjunto pequeño de parámetros y solo se entrena ese.
 
 ### ¿Por qué se usa PEFT en lugar de ajustar todo el modelo?
-Porque el ajuste fino completo de los parámetros $W \in \mathbb{R}^{d \times k}$ es muy costoso. PEFT entrena un $\Delta W \in \mathbb{R}^{d \times k}$ nuevo que es menos del 1 % del modelo base, y el modelo adaptado es $W' = W + \Delta W$.
+Porque el ajuste fino completo de los parámetros $W \in \mathbb{R}^{d \times k}$ es muy costoso. PEFT entrena un conjunto nuevo de parámetros, menos del 1 % del modelo base, que define una corrección $\Delta W$ de la misma forma que $W$. El modelo adaptado es $W' = W + \Delta W$.
 
 ### ¿Cuáles son las cuatro técnicas principales de PEFT?
 Adaptadores, LoRA, prefix tuning y prompt tuning.
@@ -310,6 +313,9 @@ $$W' = W + BA, \qquad B \in \mathbb{R}^{d \times r},\ A \in \mathbb{R}^{r \times
 ### ¿Qué parámetros se entrenan en LoRA y cómo se inicializan?
 Solo $A$ y $B$ (el modelo base queda congelado). $A$ se inicializa con una gaussiana $\mathcal{N}(0, \sigma^2)$ y $B$ con ceros.
 
+### ¿Cuántos parámetros entrena LoRA de rango $r$ para una matriz $W \in \mathbb{R}^{d \times k}$?
+$B$ tiene $d\,r$ y $A$ tiene $r\,k$, en total $r\,(d + k)$, frente a $d\,k$ de la matriz completa. Con $r \ll \min(d, k)$ es una fracción pequeña.
+
 ### ¿Por qué en LoRA se inicializa $B = 0$?
 Porque así $BA = 0$ al empezar y el modelo adaptado coincide con el modelo base. El entrenamiento parte entonces del comportamiento original.
 
@@ -323,13 +329,13 @@ A las matrices de la atención: $W_i^Q$, $W_i^K$, $W_i^V$ y $W^O$.
 Un único modelo base puede usar adaptaciones LoRA distintas para tareas distintas, y se puede combinar con otros métodos PEFT como el prefix tuning.
 
 ### ¿Qué controlan los hiperparámetros $r$ y $\alpha$ de LoRA?
-La fórmula en la práctica es $W' = W + \frac{\alpha}{r} BA$. El rango $r$ de la descomposición tiene efecto normalizador y $\alpha$ es un factor de escala del peso de la adaptación. Ambos suelen tomar valores en $\{4, 8, 16, 32\}$ y la razón $\alpha/r$ suele ser 2.
+La fórmula en la práctica es $W' = W + \frac{\alpha}{r} BA$. El rango $r$ es la dimensión de la descomposición y $\alpha$ es el factor de escala del peso de la adaptación. El cociente $\alpha/r$ normaliza el efecto de $r$. Ambos suelen tomar valores en $\{4, 8, 16, 32\}$ y la razón $\alpha/r$ suele ser 2.
 
 ### Nombra variantes de LoRA.
 QLoRA (con cuantización), DoRA (con escalado) y AdaLoRA (con rango $r$ dinámico).
 
 ### Problema: cuenta los parámetros entrenables de LoRA
-Una matriz $W$ de atención es de $4096 \times 4096$ y se adapta con LoRA de rango $r = 8$. Calcula los parámetros de $W$ y los de $B$ y $A$, y la fracción que suponen. Si se adapta $W^Q, W^K, W^V$ y $W^O$ en 32 capas, calcula los parámetros entrenables.
+Una capa de atención tiene $W^Q$, $W^K$, $W^V$ y $W^O$, todas de $4096 \times 4096$ (con las cabezas concatenadas), y cada una se adapta con LoRA de rango $r = 8$. Calcula los parámetros de una matriz $W$, los de $B$ y $A$ y la fracción que suponen. Después calcula los parámetros entrenables en 32 capas.
 #### Paso 1
 $W$ tiene $4096^2 = 16\,777\,216$ parámetros.
 #### Paso 2
@@ -380,7 +386,7 @@ La simétrica no tiene punto cero, ya que el cero real es el entero 0, y solo ne
 El rango $[-127, 127]$, con $q_{max} = 127$. Con 8 bits hay 256 valores, así que se desaprovecha uno.
 
 ### ¿Qué diferencia hay entre cuantizar por tensor y por canal?
-Por tensor se usa una sola escala con $w_{max}$ igual al máximo del tensor entero. Por canal cada canal (por ejemplo, cada columna de la matriz de pesos) tiene su propio $w_{max}$ y su propia escala.
+Por tensor se usa una sola escala con $w_{max}$ igual al máximo del tensor entero. Por canal cada canal (por ejemplo, cada columna de la matriz de pesos) tiene su propio $w_{max}$ y su propia escala. En el ejemplo de clase el canal es la columna de $W$.
 
 ### ¿Por qué la cuantización por canal pierde menos que la cuantización por tensor?
 Porque un canal con valores pequeños no comparte escala con otro de valores grandes. Con una sola escala los valores pequeños se redondean a cero.
@@ -398,12 +404,15 @@ En la estática el rango se estima antes con una pasada hacia delante de muestra
 Máximo (rango dado por el mínimo y el máximo), divergencia de Kullback-Leibler (rango que minimiza la divergencia entre los valores reconstruidos y los originales) y percentil (rango que contiene el percentil $p$ de los valores, típicamente $p = 99{,}9\,\%$).
 
 ### ¿Qué busca la cuantización posentrenamiento (PTQ)?
-Cuantizar el modelo minimizando el efecto sobre la salida. Dado $Y = WX$, se busca $\hat{W} = S \cdot \text{round}(W/S)$ que minimice el error cuadrático de la salida:
+Cuantizar el modelo minimizando el efecto sobre la salida. Dado $Y = WX$, se busca $\hat{W} = S \cdot \text{round}(W/S)$ que minimice el error de la salida, medido con la norma de Frobenius:
 
 $$\hat{W} = \arg\min_{W'} \lVert WX - W'X \rVert_F$$
 
 ### ¿Qué papel tiene el conjunto de calibración en la PTQ?
 Con una matriz de entradas $X$ representativa se determinan la escala $S$, el rango que se cuantiza y el método de redondeo.
+
+### ¿Cuánta memoria ocupan los pesos de un modelo con $N$ parámetros a $b$ bits?
+$N \cdot b / 8$ bytes. Es solo la memoria de los pesos, sin activaciones ni escalas de cuantización.
 
 ### Problema: cuantiza con la fórmula afín
 Los pesos están en $[-2, 6]$ y se cuantizan con 8 bits sin signo, $q \in [0, 255]$. Calcula $s$ y $z$, y cuantiza y reconstruye $w = -2, 0, 1, 6$.
@@ -416,6 +425,26 @@ Para $w = 1$: $q = \text{round}(31{,}875 + 64) = \text{round}(95{,}875) = 96$ y 
 #### Paso 4
 Los errores de reconstrucción son de unas milésimas ($0{,}0078$, $0{,}0039$ y $0{,}0078$), por debajo de $s/2 \approx 0{,}016$. El cero queda exacto.
 
+### Problema: cuantiza de forma simétrica con 8 bits
+Los pesos están en $[-4, 4]$ y se cuantizan con 8 bits simétricos, $q \in [-127, 127]$. Calcula $s$ y cuantiza y reconstruye $w = -4, -1, 0, 1$.
+#### Paso 1
+$s = w_{max}/q_{max} = 4/127 \approx 0{,}031496$.
+#### Paso 2
+Para $w = -4$: $q = \text{round}(-127) = -127$ y $\hat{w} = s \cdot (-127) = -4$, sin error. Para $w = 0$: $q = 0$ y $\hat{w} = 0$.
+#### Paso 3
+Para $w = 1$: $q = \text{round}(31{,}75) = 32$ y $\hat{w} = 32 \cdot 4/127 \approx 1{,}0079$. Para $w = -1$: $q = -32$ y $\hat{w} \approx -1{,}0079$.
+#### Paso 4
+El error máximo es $s/2 \approx 0{,}0157$ y aquí el mayor es $0{,}0079$. A diferencia de la afín, no hay punto cero, y el rango $[-4, 4]$ está centrado, así que se usan todos los enteros salvo $-128$.
+
+### Problema: elige el rango de calibración con y sin recorte
+Los pesos $0{,}1,\ -0{,}2,\ 0{,}3,\ 0{,}25$ y $1{,}0$ se cuantizan con 4 bits simétricos, $q_{max} = 7$. Compara usar el máximo ($R = 1$) con recortar en $R = 0{,}3$.
+#### Paso 1
+Con $R = 1$: $s = 1/7 \approx 0{,}1429$. Los cocientes $w/s$ son $0{,}7,\ -1{,}4,\ 2{,}1,\ 1{,}75,\ 7$, que redondean a $1,\ -1,\ 2,\ 2,\ 7$. Reconstruidos: $0{,}143,\ -0{,}143,\ 0{,}286,\ 0{,}286,\ 1{,}0$. Los errores de los cuatro pesos pequeños son de $0{,}043,\ 0{,}057,\ 0{,}014$ y $0{,}036$, y el grande es exacto.
+#### Paso 2
+Con $R = 0{,}3$: $s = 0{,}3/7 \approx 0{,}0429$. Los cocientes son $2{,}33,\ -4{,}67,\ 7,\ 5{,}83$ y $23{,}3$. Los cuatro primeros redondean a $2,\ -5,\ 7,\ 6$ y el último se recorta a 7. Reconstruidos: $0{,}086,\ -0{,}214,\ 0{,}3,\ 0{,}257$ y $0{,}3$. Los errores pequeños bajan a $0{,}014,\ 0{,}014,\ 0$ y $0{,}007$, pero el peso $1{,}0$ pasa a $0{,}3$, con error $0{,}7$.
+#### Paso 3
+El error cuadrático total es $0{,}0066$ con $R = 1$ y $0{,}490$ con $R = 0{,}3$. Aquí conviene el rango grande porque el peso extremo importa. El recorte compensa solo cuando los valores extremos son raros y poco relevantes.
+
 ### Problema: compara la cuantización simétrica por tensor y por columna
 Se cuantiza $W = \begin{pmatrix} 8 & 0{,}5 \\ 2 & 0{,}4 \end{pmatrix}$ con 4 bits simétricos ($q_{max} = 7$). Compara por tensor y por columna, y mide el error de la salida $WX$ con $X = (1, 1)^t$.
 #### Paso 1
@@ -425,10 +454,10 @@ Por columna, la primera sigue con $s_1 = 8/7$ y la segunda tiene $w_{max} = 0{,}
 #### Paso 3
 La salida real es $WX = (8{,}5,\ 2{,}4)^t$. Por tensor, $\hat{W}X = (8,\ 2{,}2857)^t$, con error $(0{,}5,\ 0{,}1143)$ y norma $\approx 0{,}513$. Por columna, $\hat{W}X = (8{,}5,\ 2{,}7143)^t$, con error $(0,\ -0{,}3143)$ y norma $\approx 0{,}314$.
 #### Paso 4
-La cuantización por columna da un error de salida menor (0,314 frente a 0,513), porque cada columna usa su propia escala. Con una sola escala, la columna de valores pequeños desaparece.
+La cuantización por columna da un error de salida menor (0,314 frente a 0,513), porque cada columna usa su propia escala. Con una sola escala, la columna de valores pequeños desaparece. Medido en los pesos, el error de Frobenius baja de 0,701 (por tensor) a 0,287 (por columna). El error de salida depende de $X$, y con $X = (1, 1)^t$ parte de los errores se compensa.
 
 ### Problema: memoria de los pesos de un modelo según la precisión
-Un LLM tiene 7000 millones de parámetros. Calcula la memoria que ocupan sus pesos en FP32, FP16, INT8 e INT4.
+Un LLM tiene 7000 millones de parámetros. Calcula la memoria que ocupan sus pesos en FP32, FP16, INT8 e INT4. Usa 1 GB = $10^9$ bytes.
 #### Paso 1
 Cada parámetro ocupa $b/8$ bytes. En FP32 son 4 bytes, así que $7 \cdot 10^9 \cdot 4 = 28$ GB. En FP16 son 2 bytes, es decir, 14 GB.
 #### Paso 2

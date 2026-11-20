@@ -20,8 +20,8 @@ Porque la política del agente decide qué estados visita y, por tanto, qué dat
 ### ¿Qué ocurre en cada paso entre el agente y el entorno?
 El agente ejecuta una acción $a_t \sim \pi_\theta(\cdot)$ según el estado $s_t$. El entorno produce una recompensa $r_t$ y pasa al estado $s_{t+1}$ según la función de transición $p(s_{t+1} \mid s_t, a_t)$.
 
-### ¿Cuándo la política es una red neuronal y cuándo se deriva de una función de valor?
-En la notación del tema la política puede estar parametrizada por $\theta$, escrita $\pi_\theta$. Sin embargo, el algoritmo que se desarrolla (DQN) aprende una red de valor $Q(s,a;\theta)$ y obtiene la política escogiendo la acción de mayor valor. Los métodos que optimizan una red de política directamente no se desarrollan en estas transparencias.
+### ¿Cómo se obtiene la política en DQN, si $\pi_\theta$ aparece en la notación del RL?
+DQN no tiene una red de política. Aprende una red de valor $Q(s,a;\theta)$ y la política es voraz: se escoge la acción de mayor valor. La notación $\pi_\theta$ del inicio del tema describe el marco general, y los métodos que optimizan una red de política directamente no se desarrollan.
 
 ## 2. Markov Decision Process
 
@@ -47,7 +47,7 @@ El exponente es $k$, el número de pasos hacia el futuro, y no $t$.
 $G_t = r_t + \gamma G_{t+1}$. El retorno de ahora es la recompensa inmediata más el retorno del paso siguiente descontado una vez. Esta igualdad es el punto de partida de las ecuaciones de Bellman.
 
 ### ¿Para qué sirve el factor de descuento $\gamma$ y por qué se exige $\gamma < 1$?
-Pondera menos las recompensas lejanas y hace que el retorno de un horizonte infinito sea finito. Con recompensas acotadas por $r_{\max}$, la suma geométrica no supera $r_{\max}/(1-\gamma)$.
+Pondera menos las recompensas lejanas y hace que el retorno de un horizonte infinito sea finito. Si $\lvert r\rvert \le r_{\max}$, entonces $\lvert G_t\rvert \le r_{\max}/(1-\gamma)$ por la suma geométrica.
 
 ### ¿Cómo cambia la conducta del agente con $\gamma$ cercano a 0 y con $\gamma$ cercano a 1?
 Con $\gamma$ cerca de 0 solo importa la recompensa inmediata y el agente es miope. Con $\gamma$ cerca de 1 las recompensas lejanas pesan casi igual que las próximas y el agente planifica a largo plazo.
@@ -84,7 +84,7 @@ El retorno esperado al partir del estado $s$ en el paso $t$ y seguir la polític
 $$V^\pi(s) = \mathbb{E}_{\tau \sim \pi}[G_t \mid s_t = s].$$
 
 ### ¿Qué paso permite pasar de la definición de $V^\pi(s)$ a su ecuación de Bellman?
-Sustituir $G_t = r_t + \gamma G_{t+1}$ dentro de la esperanza. El segundo sumando es el retorno esperado desde el estado siguiente, es decir, $\gamma V^\pi(s')$.
+Sustituir $G_t = r_t + \gamma G_{t+1}$ dentro de la esperanza y descomponer esta según la acción $a$ y el estado siguiente $s'$. Dado $s_{t+1}=s'$, el término $\mathbb{E}[G_{t+1}]$ es $V^\pi(s')$, y queda $\gamma V^\pi(s')$ dentro de la suma.
 
 ### ¿Cuál es la ecuación de Bellman de esperanza para $V^\pi$?
 $$V^\pi(s) = \sum_{a \in A} \pi(a \mid s) \sum_{s' \in S} P(s' \mid s, a)\left[R(s,a,s') + \gamma V^\pi(s')\right].$$
@@ -110,6 +110,11 @@ Con la recompensa inmediata más el valor descontado del estado siguiente, prome
 
 $$Q^\pi(s,a) = \sum_{s'} P(s' \mid s, a)\left[R(s,a,s') + \gamma V^\pi(s')\right].$$
 
+### ¿Cuál es la ecuación de Bellman de esperanza para $Q^\pi$?
+$$Q^\pi(s,a) = \sum_{s'} P(s' \mid s, a)\left[R(s,a,s') + \gamma \sum_{a'} \pi(a' \mid s')\, Q^\pi(s',a')\right].$$
+
+Es la de $V^\pi$ con la acción $a$ ya fijada. Se obtiene sustituyendo $V^\pi(s') = \sum_{a'}\pi(a'\mid s')Q^\pi(s',a')$ en $Q^\pi(s,a) = \sum_{s'}P(s'\mid s,a)[R + \gamma V^\pi(s')]$.
+
 ### ¿Qué ventaja tiene $Q^\pi(s,a)$ frente a $V^\pi(s)$ para decidir qué hacer?
 Permite comparar las acciones de un estado directamente, sin necesitar el modelo de transición. Con $V^\pi$ habría que mirar los estados siguientes de cada acción, y para eso hace falta $P$.
 
@@ -134,6 +139,18 @@ $$V^\pi(s) = 0{,}6 \cdot 2{,}8 + 0{,}4 \cdot 1 = 1{,}68 + 0{,}4 = 2{,}08.$$
 #### Paso 4
 La acción $a_1$ vale más ($2{,}8 > 1$), así que es la mejor en $s$. Aun así $V^\pi(s) = 2{,}08$ queda por debajo de $Q^\pi(s,a_1)$, porque la política $\pi$ elige $a_2$ el 40 % de las veces.
 
+### Demostración: ecuación de Bellman de esperanza para $V^\pi$
+Parte de $V^\pi(s) = \mathbb{E}_{\tau\sim\pi}[G_t \mid s_t = s]$ y llega a $V^\pi(s) = \sum_a \pi(a\mid s)\sum_{s'}P(s'\mid s,a)[R(s,a,s') + \gamma V^\pi(s')]$.
+
+#### Paso 1
+Se escribe $G_t = r_t + \gamma G_{t+1}$ y se saca el factor: $V^\pi(s) = \mathbb{E}[r_t + \gamma G_{t+1} \mid s_t = s]$.
+
+#### Paso 2
+Se condiciona en la acción y en el estado siguiente: $p(a, s' \mid s) = \pi(a\mid s)\,P(s'\mid s,a)$, de modo que $V^\pi(s) = \sum_a \pi(a\mid s)\sum_{s'}P(s'\mid s,a)\,\mathbb{E}[r_t + \gamma G_{t+1} \mid s, a, s']$.
+
+#### Paso 3
+Con $R(s,a,s') = \mathbb{E}[r_t \mid s,a,s']$ y la propiedad de Markov, $\mathbb{E}[G_{t+1}\mid s,a,s'] = \mathbb{E}[G_{t+1}\mid s_{t+1}=s'] = V^\pi(s')$. Sustituyendo queda la ecuación buscada.
+
 ## 4. Optimal Policy
 
 ### ¿Qué son $V^*$, $Q^*$ y $\pi^*$?
@@ -146,7 +163,7 @@ $V^*(s) = \max_{a} Q^*(s,a)$. Bajo la política óptima, el valor de un estado e
 $$Q^*(s,a) = \sum_{s'} P(s' \mid s, a)\left[R(s,a,s') + \gamma \max_{a'} Q^*(s',a')\right].$$
 
 ### ¿Qué cambia entre la ecuación de Bellman de esperanza y la de optimalidad?
-En la de esperanza se promedia sobre las acciones con $\pi(a' \mid s')$. En la de optimalidad se toma el máximo sobre $a'$, porque la política óptima elige siempre la mejor acción.
+En la de esperanza, $Q^\pi(s,a)=\sum_{s'}P(s'\mid s,a)[R+\gamma\sum_{a'}\pi(a'\mid s')Q^\pi(s',a')]$, se promedia sobre $a'$ con la política. En la de optimalidad el promedio se sustituye por $\max_{a'}$, porque la política óptima elige siempre la mejor acción.
 
 ### ¿Cómo se obtiene la política óptima a partir de $Q^*$?
 Con la política voraz (greedy): $\pi^*(s) = \arg\max_{a} Q^*(s,a)$. No hace falta conocer las probabilidades de transición $P(s' \mid s, a)$.
@@ -155,7 +172,7 @@ Con la política voraz (greedy): $\pi^*(s) = \arg\max_{a} Q^*(s,a)$. No hace fal
 Con $Q^*$ basta mirar el valor de cada acción en el estado actual y quedarse con el mayor. Con $V^*$ habría que predecir a qué estado lleva cada acción, y eso exige el modelo $P$, que el agente no conoce.
 
 ### Problema: valores óptimos en una cadena determinista
-Una cadena tiene los estados $s_0, s_1, s_2, s_3$ con $s_3$ final. En cada estado la acción $R$ avanza al siguiente y la acción $L$ retrocede (en $s_0$ se queda). Solo da recompensa la transición $s_2 \to s_3$, que vale 10. Con $\gamma = 0{,}9$, calcula $Q^*(s_2,R)$, $Q^*(s_1,R)$ y $Q^*(s_0,R)$, suponiendo que avanzar es lo óptimo en los tres estados.
+Una cadena tiene los estados $s_0, s_1, s_2, s_3$ con $s_3$ final. En cada estado la acción $R$ avanza al siguiente y la acción $L$ retrocede (en $s_0$ se queda). Solo da recompensa la transición $s_2 \to s_3$, que vale 10. Con $\gamma = 0{,}9$, calcula $Q^*(s_2,R)$, $Q^*(s_1,R)$ y $Q^*(s_0,R)$, suponiendo que avanzar es lo óptimo en los tres estados. Comprueba además que $Q^*(s_1,L) < Q^*(s_1,R)$.
 
 #### Paso 1
 Desde $s_2$ se llega al estado final con recompensa 10 y no queda futuro:
@@ -172,7 +189,10 @@ De la misma forma, desde $s_0$:
 
 $$Q^*(s_0,R) = 0 + 0{,}9 \cdot 9 = 8{,}1.$$
 
-El valor de la recompensa final se multiplica por $\gamma$ una vez por cada paso que separa al estado de la meta.
+El valor de la recompensa final se multiplica por $\gamma$ una vez por cada transición con recompensa 0 que queda antes de cobrarla: $Q^*(s_k,R)=10\,\gamma^{\,2-k}$ para $k=0,1,2$.
+
+#### Paso 4
+Retroceder desde $s_1$ lleva a $s_0$, cuyo mejor valor es 8,1. Por tanto $Q^*(s_1,L) = 0 + 0{,}9 \cdot 8{,}1 = 7{,}29 < 9 = Q^*(s_1,R)$, y avanzar es óptimo en $s_1$.
 
 ## 5. Q-Learning Algorithm
 
@@ -193,7 +213,7 @@ $J(Q(s,a)) = \tfrac{1}{2}\left(Y^*(s,a) - Q(s,a)\right)^2$. El factor $\tfrac{1}
 ### ¿Cuál es el gradiente de la pérdida de Q-learning respecto a $Q(s,a)$?
 $$\frac{\partial J}{\partial Q(s,a)} = -\left(Y^*(s,a) - Q(s,a)\right).$$
 
-Se trata el objetivo $Y^*$ como una constante y solo se deriva respecto a la estimación $Q(s,a)$.
+Se trata el objetivo como constante y solo se deriva respecto a $Q(s,a)$. Con el objetivo de una muestra, que usa la propia tabla en $s_{t+1}$, no se deriva a través de ese término (semigradiente), de modo que la regla no es el gradiente exacto de una pérdida fija.
 
 ### ¿Por qué no se puede calcular $Y^*(s,a)$ de forma exacta y qué se hace?
 Porque la esperanza usa $P(s' \mid s, a)$, que el agente no conoce. Se sustituye por la muestra observada en el paso $t$:
@@ -208,22 +228,22 @@ $$Q(s_t,a_t) \leftarrow Q(s_t,a_t) + \alpha\left[R + \gamma(1 - \text{goal}(s_{t
 ### ¿Qué papel tiene $\alpha$ en la regla de Q-learning?
 Es la tasa de aprendizaje del descenso de gradiente. Con $\alpha = 1$ la estimación pasa a valer el objetivo de golpe, y con $\alpha$ pequeño se acerca a él solo una fracción de la distancia.
 
-### ¿Qué estimación usa Q-learning en el objetivo y qué consecuencia tiene?
-Usa la propia tabla $Q$ actual en el estado siguiente. Por tanto, el objetivo cambia a medida que cambia la tabla, y los valores se propagan hacia atrás desde las recompensas, un paso por cada visita.
+### ¿Qué es el bootstrapping en Q-learning y qué consecuencia tiene?
+El objetivo se construye con la propia tabla $Q$ en el estado siguiente, es decir, se actualiza una estimación con otra estimación. Por tanto el objetivo cambia a medida que cambia la tabla, y el valor de la recompensa se propaga hacia atrás un paso cada vez que se visita el estado anterior.
 
 ### ¿Por qué el objetivo de Q-learning usa el máximo y no el valor de la acción que el agente ejecutará a continuación?
 Porque aprende $Q^*$, el valor de la política óptima, y esa política elige la mejor acción en $s_{t+1}$. El agente puede explorar con $\epsilon$-greedy y ejecutar otra acción, pero el objetivo sigue usando el máximo.
 
-### ¿Cómo se elige la acción durante el entrenamiento en el ejemplo de Q-learning?
+### ¿Cómo se elige la acción durante el entrenamiento de Q-learning?
 Con una política $\epsilon$-greedy. Con probabilidad $1-\epsilon$ se explota la acción $\arg\max_a Q(s,a)$ y con probabilidad $\epsilon$ se explora con una acción al azar.
 
-### En el ejemplo de tres estados con recompensa 10 al llegar a la meta, ¿por qué la primera actualización deja la tabla a cero?
+### Con la tabla $Q$ a ceros y recompensa 0 en la primera transición, ¿por qué la actualización de Q-learning no cambia la tabla?
 Porque la transición de $s=0$ a $s=1$ da recompensa 0 y todos los valores $Q$ valen 0 al empezar. El objetivo es $0 + 0{,}9 \cdot 0 = 0$, de modo que no hay nada que corregir.
 
-### En ese ejemplo, ¿cómo llega la información de la recompensa a $s=0$?
-Primero se actualiza $Q(1,R)$ con la recompensa 10 y, en una iteración posterior, $Q(0,R)$ usa $\max_{a'} Q(1,a')$. Con $\alpha = 0{,}5$ y $\gamma = 0{,}9$ vale $0{,}5 \cdot 0{,}9 \cdot 5 = 2{,}25$ y luego $Q(1,R)$ sube a 7,5.
+### En una cadena $0 \to 1 \to 2$ ($2$ final, recompensa 10 al pasar de $1$ a $2$, $\alpha=0{,}5$, $\gamma=0{,}9$, tabla a ceros), ¿cómo llega la recompensa a $Q(0,R)$?
+La información llega a $Q(0,R)$ a través de $\max_{a'} Q(1,a')$. Primero $Q(1,R)$ pasa de 0 a $0{,}5\,(10) = 5$. En una iteración posterior, $Q(0,R) = 0{,}5\,(0 + 0{,}9 \cdot 5 - 0) = 2{,}25$ y después $Q(1,R) = 5 + 0{,}5\,(10 - 5) = 7{,}5$.
 
-### En ese ejemplo, ¿a qué valores converge la tabla y qué política da?
+### En esa misma cadena $0 \to 1 \to 2$ con $\gamma=0{,}9$, ¿a qué valores converge la tabla y qué política da?
 A $Q^*(0,R) = 9$ y $Q^*(1,R) = 10$, que son los valores descontados de la recompensa de 10. La política voraz elige $R$ en los dos estados.
 
 ### Problema: una actualización de Q-learning y el efecto del estado final
@@ -257,6 +277,21 @@ $$Q \leftarrow Q - \alpha \frac{\partial J}{\partial Q} = Q + \alpha\,(Y - Q).$$
 
 #### Paso 3
 Se sustituye el objetivo de la muestra $Y = R + \gamma(1 - \text{goal}(s_{t+1}))\max_{a'} Q(s_{t+1},a')$ y se obtiene la regla de Q-learning. Cuando el error $Y - Q$ es positivo, la estimación sube, y cuando es negativo, baja.
+
+### Problema: tres episodios de Q-learning en una cadena
+Hay tres estados $0, 1, 2$ y un estado final $3$. Solo existe la acción $R$, que avanza al estado siguiente. Solo da recompensa la transición $2 \to 3$, que vale 10. Con $\alpha = 0{,}5$, $\gamma = 0{,}8$ y $Q(s,R) = 0$ al empezar, haz tres episodios completos y en cada uno actualiza los estados en el orden $0, 1, 2$. Da la tabla tras cada episodio y compárala con los valores óptimos.
+
+#### Paso 1
+Episodio 1. $Q(0,R) = 0 + 0{,}5(0 + 0{,}8\cdot 0 - 0) = 0$. $Q(1,R) = 0$. $Q(2,R) = 0 + 0{,}5(10 + 0 - 0) = 5$ (el estado $3$ es final y no suma futuro).
+
+#### Paso 2
+Episodio 2. $Q(0,R) = 0{,}5(0 + 0{,}8\cdot 0) = 0$. $Q(1,R) = 0{,}5(0 + 0{,}8\cdot 5) = 2$. $Q(2,R) = 5 + 0{,}5(10 - 5) = 7{,}5$.
+
+#### Paso 3
+Episodio 3. $Q(0,R) = 0{,}5(0 + 0{,}8\cdot 2) = 0{,}8$. $Q(1,R) = 2 + 0{,}5(0 + 0{,}8\cdot 7{,}5 - 2) = 4$. $Q(2,R) = 7{,}5 + 0{,}5(10 - 7{,}5) = 8{,}75$.
+
+#### Paso 4
+Los valores óptimos son $Q^*(2,R) = 10$, $Q^*(1,R) = 8$ y $Q^*(0,R) = 6{,}4$. La información de la recompensa avanza un estado por episodio, y cada $Q$ se acerca a su óptimo sin alcanzarlo en tres episodios.
 
 ## 6. Deep Reinforcement Learning
 
@@ -304,7 +339,7 @@ $$\theta^- \leftarrow \tau\,\theta + (1-\tau)\,\theta^-, \qquad \tau \ll 1.$$
 
 Así $\theta^-$ sigue a $\theta$ con retraso y cambia despacio.
 
-### ¿Qué se compara entre el Q-learning tabular y DQN al actualizar?
+### ¿En qué se diferencian el Q-learning tabular y DQN al actualizar los valores?
 | | Tabular | DQN |
 |---|---|---|
 | Representación | tabla $Q \in \mathbb{R}^{\lvert S\rvert \times \lvert A\rvert}$ | red $Q(s,a;\theta)$ |
@@ -317,7 +352,7 @@ Así $\theta^-$ sigue a $\theta$ con retraso y cambia despacio.
 El estado $s$ es la pila de los píxeles en bruto de los últimos 4 fotogramas, y la red devuelve $Q(s,a;\theta)$ para las 18 acciones posibles (posiciones del joystick y botones). Los puntos del juego se normalizan para dar una recompensa en cada paso.
 
 ### Problema: objetivo y pérdida de DQN con un lote de dos transiciones
-Se usa $\gamma = 0{,}9$ y un lote $\mathcal{D}$ de dos transiciones. En la primera, el agente ejecutó la acción 1 en $s$, recibió 1 y llegó a $s'$, que no es final. La red en línea da $Q(s,1;\theta) = 2$, y la red objetivo da $Q(s',\cdot\,;\theta^-) = (3, 5)$. En la segunda, ejecutó la acción 0 en otro estado, recibió 10 y llegó a un estado final. La red en línea da $Q(\cdot,0;\theta) = 7$. Calcula los dos objetivos, la pérdida $J$ y la derivada de $J$ respecto a cada $Q$ ejecutado.
+Se usa $\gamma = 0{,}9$ y un lote $\mathcal{D}$ de dos transiciones. En la primera, el agente ejecutó la acción 1 en $s$, recibió 1 y llegó a $s'$, que no es final. La red en línea da $Q_1 = Q(s,1;\theta) = 2$, y la red objetivo da $Q(s',\cdot\,;\theta^-) = (3, 5)$. En la segunda, ejecutó la acción 0 en otro estado $s_2$, recibió 10 y llegó a un estado final. La red en línea da $Q_2 = Q(s_2,0;\theta) = 7$. Calcula los dos objetivos, la pérdida $J$, $\partial J/\partial Q_1$ y $\partial J/\partial Q_2$.
 
 #### Paso 1
 Primer objetivo. Con $\max(3,5) = 5$ y un estado no final:
@@ -342,7 +377,7 @@ $$\frac{\partial J}{\partial Q_1} = -\frac{3{,}5}{2} = -1{,}75, \qquad \frac{\pa
 Los dos signos son negativos, de modo que el descenso de gradiente sube ambas estimaciones. Las salidas de las acciones no ejecutadas tienen derivada 0.
 
 ### Problema: un paso de gradiente en una red de valor lineal
-Una red lineal tiene $Q(s,a;\theta) = w \cdot \phi(s)$ para la acción $a$ ejecutada, con características $\phi(s) = (1, 2)$ y pesos $w = (0{,}5;\ 0{,}75)$. El objetivo de la muestra es $Y = 5{,}5$ (calculado con la red congelada) y el lote tiene una sola muestra. Con tasa de aprendizaje $\eta = 0{,}1$, haz un paso de descenso de gradiente y comprueba cómo cambia el error.
+Una red lineal tiene $Q(s,a;\theta) = w \cdot \phi(s)$ para la acción $a$ ejecutada, con características $\phi(s) = (1, 2)$ y pesos $w = (0{,}5;\ 0{,}75)$. El objetivo de la muestra es $Y = 5{,}5$ (calculado con la red congelada) y el lote tiene una sola muestra. Con tasa de aprendizaje $\alpha = 0{,}1$, haz un paso de descenso de gradiente y comprueba cómo cambia el error.
 
 #### Paso 1
 La estimación actual es $Q = 0{,}5 \cdot 1 + 0{,}75 \cdot 2 = 2$ y el error es $Y - Q = 3{,}5$.

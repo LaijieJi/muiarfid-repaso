@@ -3,6 +3,7 @@ import { proteger, restaurar } from "./formulas.js";
 
 const REPO_EDITAR = "https://github.com/LaijieJi/muiarfid-repaso/edit/main/";
 const CLAVE_SELECCION = "muiarfid-repaso:seleccion";
+const TAMANOS = [10, 25, 50, 0]; // 0 = todas
 // Orden del máster por bloques. Las siglas sin nombre muestran solo la chapa.
 const NOMBRES = {
   RFA: "Reconocimiento de Formas y Aprendizaje Automático", TMH: "Técnicas Metaheurísticas",
@@ -26,11 +27,13 @@ let teclas = {};
 function cargarSeleccion() {
   try {
     const s = JSON.parse(almacenLocal().getItem(CLAVE_SELECCION));
-    if (s && Array.isArray(s.excluidas) && (s.modo === "tarjetas" || s.modo === "problemas")) return s;
+    if (s && Array.isArray(s.excluidas) && (s.modo === "tarjetas" || s.modo === "problemas")) {
+      return { ...s, tamano: TAMANOS.includes(s.tamano) ? s.tamano : 25, abiertas: Array.isArray(s.abiertas) ? s.abiertas : [] };
+    }
   } catch {
     // Sin almacenamiento o con datos corruptos se empieza con todo marcado.
   }
-  return { excluidas: [], modo: "tarjetas" };
+  return { excluidas: [], modo: "tarjetas", tamano: 25, abiertas: [] };
 }
 
 function guardarSeleccion() {
@@ -95,8 +98,43 @@ function red() {
   return [...grupos].sort(([a], [b]) => ORDEN.indexOf(a) - ORDEN.indexOf(b));
 }
 
+// Reparte una lista por turnos entre los grupos que da `clave`, de modo que ningún grupo la acapare.
+function repartir(lista, clave) {
+  const grupos = new Map();
+  for (const t of lista) {
+    if (!grupos.has(clave(t))) grupos.set(clave(t), []);
+    grupos.get(clave(t)).push(t);
+  }
+  const columnas = [...grupos.values()];
+  const salida = [];
+  while (columnas.some(c => c.length)) for (const c of columnas) if (c.length) salida.push(c.shift());
+  return salida;
+}
+
+// Con un tope de sesión, primero las vencidas. Las nuevas se eligen entre las unidades y se mezclan entre asignaturas.
+function recortar(cola, n) {
+  if (!n || cola.length <= n) return cola;
+  const vencida = t => typeof progreso[t.id]?.vence === "string";
+  const vencidas = cola.filter(vencida).slice(0, n);
+  const nuevas = repartir(cola.filter(t => !vencida(t)), t => t.fichero).slice(0, n - vencidas.length);
+  return [...vencidas, ...repartir(nuevas, t => t.sigla)];
+}
+
+function chevron() {
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  const trazo = document.createElementNS(ns, "path");
+  svg.setAttribute("viewBox", "0 0 16 16");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("class", "chevron");
+  trazo.setAttribute("d", "M3.5 6 8 10.5 12.5 6");
+  svg.append(trazo);
+  return svg;
+}
+
 function mostrarInicio() {
   const estaciones = [];
+  const cabeceras = [];
   const estado = el("p", { class: "estado", "aria-live": "polite" });
   const empezarBoton = boton("", empezar, "principal");
   const todoBoton = boton("Repasar todo", repasarTodo);
@@ -104,19 +142,30 @@ function mostrarInicio() {
   // Las cifras cambian en su sitio, sin volver a pintar la red.
   const actualizar = () => {
     const hoy = hoyLocal();
-    for (const { fichero, unidad, nodo, input, cifraHoy, cifraTotal } of estaciones) {
-      const propias = unidad.tarjetas.filter(delModo);
-      const marcada = !seleccion.excluidas.includes(fichero);
-      input.checked = marcada;
-      input.disabled = propias.length === 0;
-      nodo.classList.toggle("vacia", propias.length === 0);
-      nodo.style.setProperty("--peso", propias.length);
-      cifraHoy.textContent = pendientes(propias, progreso, hoy).length;
-      cifraTotal.textContent = propias.length;
+    for (const e of estaciones) {
+      const propias = e.unidad.tarjetas.filter(delModo);
+      e.input.checked = !seleccion.excluidas.includes(e.fichero);
+      e.input.disabled = propias.length === 0;
+      e.nodo.classList.toggle("vacia", propias.length === 0);
+      e.nodo.style.setProperty("--peso", propias.length);
+      e.hoyN = pendientes(propias, progreso, hoy).length;
+      e.totalN = propias.length;
+      e.cifraHoy.textContent = e.hoyN;
+      e.cifraTotal.textContent = e.totalN;
+    }
+    for (const c of cabeceras) {
+      const con = c.estaciones.filter(e => e.totalN > 0);
+      const marcadas = con.filter(e => e.input.checked);
+      const parcial = marcadas.length > 0 && marcadas.length < con.length;
+      c.chip.setAttribute("aria-pressed", parcial ? "mixed" : String(marcadas.length > 0));
+      c.parcial.textContent = parcial ? `${marcadas.length} de ${con.length}` : "";
+      c.hoy.textContent = marcadas.reduce((suma, e) => suma + e.hoyN, 0);
+      c.total.textContent = con.reduce((suma, e) => suma + e.totalN, 0);
     }
     const elegidas = seleccionadas();
     const cuantas = pendientes(elegidas, progreso, hoy).length;
-    empezarBoton.replaceChildren(`Repasar ${cuantas} ${nombreModo(cuantas)}`);
+    const n = Math.min(cuantas, seleccion.tamano || Infinity);
+    empezarBoton.replaceChildren(`Repasar ${n} ${nombreModo(n)}`);
     empezarBoton.hidden = cuantas === 0;
     todoBoton.classList.toggle("principal", cuantas === 0);
     todoBoton.disabled = elegidas.length === 0;
@@ -136,10 +185,23 @@ function mostrarInicio() {
         }),
         texto)));
 
-  const lineas = red().map(([sigla, unidades]) =>
-    el("section", { class: "linea", "data-sigla": sigla, "aria-label": NOMBRES[sigla] || sigla },
-      el("h2", { class: "linea-cab" }, chapa(sigla), NOMBRES[sigla] || null),
-      el("ul", { class: "tramo" }, ...[...unidades].map(([fichero, unidad]) => {
+  const tamano = el("div", { class: "tamano" },
+    el("span", { "aria-hidden": "true" }, "Por sesión"),
+    el("fieldset", { class: "segmentado pequeno" },
+      el("legend", { class: "oculto" }, "Tamaño de la sesión"),
+      ...TAMANOS.map(n =>
+        el("label", {},
+          el("input", {
+            type: "radio", name: "tamano", value: n, checked: seleccion.tamano === n,
+            onchange: () => { seleccion.tamano = n; actualizar(); },
+          }),
+          n === 0 ? "Todas" : String(n)))));
+
+  const lineas = red().map(([sigla, unidades]) => {
+    const abierta = seleccion.abiertas.includes(sigla);
+    const propias = [];
+    const tramo = el("ul", { class: "tramo", id: `tramo-${sigla}`, hidden: !abierta },
+      ...[...unidades].map(([fichero, unidad]) => {
         const input = el("input", {
           type: "checkbox",
           onchange: e => {
@@ -152,22 +214,56 @@ function mostrarInicio() {
         const cifraTotal = el("span", { class: "cifra total" });
         const nodo = el("label", { class: "estacion" },
           input, el("span", { class: "estacion-nombre" }, unidad.nombre), cifraHoy, cifraTotal);
-        estaciones.push({ fichero, unidad, nodo, input, cifraHoy, cifraTotal });
+        const e = { fichero, unidad, nodo, input, cifraHoy, cifraTotal };
+        propias.push(e);
+        estaciones.push(e);
         return el("li", {}, nodo);
-      }))));
+      }));
+
+    // La chapa marca o desmarca toda la asignatura, y el nombre pliega o despliega sus estaciones.
+    const chip = el("button", {
+      type: "button", class: "chapa chip", "aria-label": `Todas las unidades de ${sigla}`,
+      onclick: () => {
+        const ficheros = [...unidades.keys()];
+        const todas = ficheros.every(f => !seleccion.excluidas.includes(f));
+        seleccion.excluidas = seleccion.excluidas.filter(f => !ficheros.includes(f));
+        if (todas) seleccion.excluidas.push(...ficheros);
+        actualizar();
+      },
+    }, sigla);
+    const parcial = el("span", { class: "parcial" });
+    const plegar = el("button", {
+      type: "button", class: "plegar", "aria-expanded": String(abierta), "aria-controls": `tramo-${sigla}`,
+      onclick: () => {
+        const abre = plegar.getAttribute("aria-expanded") !== "true";
+        plegar.setAttribute("aria-expanded", String(abre));
+        tramo.hidden = !abre;
+        seleccion.abiertas = seleccion.abiertas.filter(x => x !== sigla);
+        if (abre) seleccion.abiertas.push(sigla);
+        guardarSeleccion();
+      },
+    }, el("span", { class: "nombre" }, NOMBRES[sigla] || sigla), parcial, chevron());
+    const hoyCab = el("span", { class: "cifra hoy" });
+    const totalCab = el("span", { class: "cifra total" });
+    cabeceras.push({ chip, parcial, hoy: hoyCab, total: totalCab, estaciones: propias });
+
+    return el("section", { class: "linea", "data-sigla": sigla },
+      el("div", { class: "linea-cab" }, el("h2", { class: "linea-id" }, chip, plegar), hoyCab, totalCab),
+      tramo);
+  });
 
   pantalla(
     el("header", { class: "cabecera" }, el("h1", { class: "marca" }, "Repaso MUIARFID"), modos),
     el("div", { class: "columnas", "aria-hidden": "true" }, el("span"), el("span", {}, "hoy"), el("span", {}, "total")),
     el("main", { class: "red" }, ...lineas),
-    el("div", { class: "accion" }, estado, el("div", { class: "botones" }, empezarBoton, todoBoton)),
+    el("div", { class: "accion" }, estado, tamano, el("div", { class: "botones" }, empezarBoton, todoBoton)),
   );
   actualizar();
 }
 
 function empezar() {
   const cola = pendientes(seleccionadas(), progreso, hoyLocal());
-  if (cola.length) mostrarSesion(cola);
+  if (cola.length) mostrarSesion(recortar(cola, seleccion.tamano));
 }
 
 function repasarTodo() {

@@ -2,13 +2,19 @@
 
 ## 1. Introducción
 
-### ¿Qué idea central distingue a cada gran familia de modelos generativos neuronales?
-Autoencoder (AE): comprime y reconstruye. Autoencoder variacional (VAE): espacio latente probabilístico. Red generativa adversaria (GAN): un generador compite con un discriminador. Autorregresivos: predicen un elemento cada vez. Flujo normalizante (normalizing flow, NF): transformaciones invertibles. Modelos de difusión: revierten un proceso gradual de ruido.
+### ¿Qué idea central distingue al autoencoder, al VAE y a la GAN entre los modelos generativos neuronales?
+Autoencoder (AE): comprime y reconstruye. Autoencoder variacional (VAE): espacio latente probabilístico. Red generativa adversaria (GAN): un generador compite con un discriminador.
 
-### ¿Qué familia domina hoy en cada aplicación principal?
-Modelos de lenguaje y generación de código: Transformers autorregresivos solo con decodificador. Imagen y vídeo: difusión latente y flow matching (más difusión en vídeo). Voz y música combinan difusión, flow matching y autorregresivos.
+### ¿Qué idea central distingue a los modelos autorregresivos, a los flujos normalizantes y a los de difusión?
+Autorregresivos: predicen un elemento cada vez. Flujo normalizante (normalizing flow, NF): transformaciones invertibles. Modelos de difusión: revierten un proceso gradual de ruido.
 
-### ¿Qué significa que muchos sistemas actuales sean híbridos? Pon un ejemplo.
+### ¿Qué idea tienen los modelos basados en energía, flow matching, la difusión latente y los modelos de consistencia?
+Los modelos basados en energía (EBM) aprenden una función de energía sobre los datos. Flow matching aprende un transporte continuo entre distribuciones y es una alternativa más rápida a la difusión. La difusión latente (LDM) aplica la difusión en un espacio latente y es la base de la generación de imagen a partir de texto. Los modelos de consistencia generan en uno o pocos pasos.
+
+### ¿Qué familia domina hoy en modelos de lenguaje, código, imagen, vídeo, voz y música?
+Lenguaje y código: Transformers autorregresivos. Imagen y vídeo: difusión (latente) y flow matching. Voz: difusión, flow matching y autorregresivos. Música: autorregresivos, difusión e híbridos. En 3D: difusión, flow matching e híbridos con campos neuronales.
+
+### ¿Qué significa que muchos sistemas actuales sean híbridos y qué ejemplo hay?
 Que combinan paradigmas en un mismo sistema. Por ejemplo, Stable Diffusion usa difusión en espacio latente junto con un codificador de texto Transformer, y DALL-E 1 combina un VQ-VAE con un Transformer.
 
 ## 2. Convoluciones transpuestas
@@ -17,25 +23,28 @@ Que combinan paradigmas en un mismo sistema. Por ejemplo, Stable Diffusion usa d
 Para aumentar (upsample) las dimensiones espaciales de un mapa de características. También se llama convolución con paso fraccionario y se usa para deshacer el submuestreo que hacen las convoluciones normales.
 
 ### ¿Cómo se relacionan la convolución normal y la transpuesta con la matriz $C$?
-La convolución se escribe $\text{vec}(Y) = C\,\text{vec}(X)$, con $C$ construida a partir del filtro. La transpuesta usa la matriz traspuesta: $\text{vec}(X) = C^\top \text{vec}(Y)$.
+La convolución se escribe $\text{vec}(Y) = C\,\text{vec}(X)$, con $C$ construida a partir del filtro. La convolución transpuesta usa la matriz transpuesta: $\text{vec}(X) = C^\top \text{vec}(Y)$.
 
 ### ¿Es la convolución transpuesta la inversa de la convolución?
-No. Recupera la forma del tensor, pero no sus valores, porque $C$ no es cuadrada y $C^\top$ no es $C^{-1}$.
+No. Recupera la forma del tensor, pero no sus valores, porque $C$ no es cuadrada y $C^\top$ no es $C^{-1}$. (Complemento que no sale del PDF.)
 
 ### ¿En qué consiste el método "scatter and sum" de la convolución transpuesta?
 Cada elemento $y_{ij}$ de la entrada multiplica todo el filtro $W$ y el resultado se coloca (scatter) en la posición correspondiente de la salida. Las contribuciones que se solapan se suman.
 
 ### ¿Qué tamaño de salida produce una convolución transpuesta con entrada de lado $y$, filtro $f$, paso $s$ y relleno $p$?
-$x = s\,(y-1) + f - 2p$. Con $s=1$, $p=0$, $y=2$, $f=2$ da 3. Con $s=2$ da 4.
+$x = s\,(y-1) + f - 2p$. Con $s=1$, $p=0$, $y=2$, $f=2$ da 3. Con $s=2$ da 4. (Fórmula general: complemento, las transparencias solo dan los casos $s=1$ y $s=2$.)
 
 ### ¿Cómo se coloca cada bloque en "scatter and sum" cuando el paso es $s=2$ y el filtro es $2\times2$?
-Los bloques se separan $s$ posiciones, de modo que no se solapan. En el caso $y=2$, $f=2$ salen cuatro bloques de $2\times2$ que llenan una salida $4\times4$ sin sumas.
+Los bloques se separan $s$ posiciones. Con $s = f = 2$ no se solapan, de modo que no hay sumas y con entrada $2\times2$ llenan una salida $4\times4$ con cuatro bloques $2\times2$. Si $s < f$ (por ejemplo filtro $4\times4$ y paso 2), los bloques sí se solapan y se suman.
 
 ### ¿Qué convolución normal equivale a una convolución transpuesta con paso $s$?
 Se gira el filtro $180^\circ$, se dilata la entrada insertando $s-1$ ceros entre filas y columnas, se rellena con $f-1-p$ ceros alrededor y se aplica una convolución normal de paso 1 y sin relleno.
 
 ### ¿Cómo se propagan los gradientes en una convolución transpuesta?
 Como $\text{vec}(X) = C^\top \text{vec}(Y)$, el jacobiano respecto a la entrada es $C^\top$. Respecto a los parámetros se deriva el producto $C^\top\text{vec}(Y)$ con $\text{vec}(Y)$ como constante.
+
+### ¿Qué operaciones son los gradientes de una convolución transpuesta respecto a su entrada y a su filtro?
+Respecto a la entrada $Y$, es la convolución normal, con el mismo filtro $W$ y el mismo paso $s$, del gradiente de la salida: $\partial L/\partial Y = W \circledast \partial L/\partial X$. Respecto al filtro, $\partial L/\partial W_{ab} = \sum_{i,j}\frac{\partial L}{\partial X_{si+a,\,sj+b}}\,Y_{ij}$.
 
 ### Problema: convolución transpuesta con paso 1 y paso 2 por "scatter and sum"
 Sea el filtro $W = \begin{bmatrix} 1 & -1 \\ 2 & 0 \end{bmatrix}$ y la entrada $Y = \begin{bmatrix} 2 & 1 \\ 0 & 3 \end{bmatrix}$. Calcula $W \circledast^\top Y$ con $s=1$, $p=0$ y después con $s=2$, $p=0$. Indica antes el tamaño de cada salida.
@@ -44,21 +53,27 @@ Tamaño de salida $s(y-1)+f-2p$. Con $s=1$ es $1\cdot 1+2 = 3$, es decir $3\time
 #### Paso 2
 Cada entrada multiplica el filtro. El bloque de $y_{00}=2$ es $\begin{bmatrix} 2 & -2 \\ 4 & 0 \end{bmatrix}$. El de $y_{01}=1$ es $\begin{bmatrix} 1 & -1 \\ 2 & 0 \end{bmatrix}$. El de $y_{10}=0$ es nulo. El de $y_{11}=3$ es $\begin{bmatrix} 3 & -3 \\ 6 & 0 \end{bmatrix}$.
 #### Paso 3
-Con $s=1$ los bloques se colocan en las esquinas $(0,0)$, $(0,1)$, $(1,0)$ y $(1,1)$ de la salida $3\times3$ y se suman donde se solapan. El elemento $(1,1)$ recibe $0 + 2 + 3 = 5$ (de los bloques de $y_{00}$, $y_{01}$ y $y_{11}$) y el $(0,1)$ recibe $-2 + 1 = -1$:
+Con $s=1$ los bloques se colocan con su esquina superior izquierda en $(0,0)$, $(0,1)$, $(1,0)$ y $(1,1)$ de la salida $3\times3$ y se suman donde se solapan. El elemento $(1,1)$ recibe $0 + 2 + 0 + 3 = 5$ (el bloque de $y_{10}$ es nulo) y el $(0,1)$ recibe $-2 + 1 = -1$:
 $$\begin{bmatrix} 2 & -1 & -1 \\ 4 & 5 & -3 \\ 0 & 6 & 0 \end{bmatrix}$$
 #### Paso 4
 Con $s=2$ los bloques se colocan en $(0,0)$, $(0,2)$, $(2,0)$ y $(2,2)$ y no se solapan:
 $$\begin{bmatrix} 2 & -2 & 1 & -1 \\ 4 & 0 & 2 & 0 \\ 0 & 0 & 3 & -3 \\ 0 & 0 & 6 & 0 \end{bmatrix}$$
-Se ha comprobado con numpy, tanto con la matriz $C^\top$ para $s=1$ como con la convolución equivalente (filtro girado, entrada dilatada y rellena con $f-1-p=1$) para $s=2$.
 
 ### Problema: tamaños y parámetros de un generador con convoluciones transpuestas
 Un generador recibe un vector $z$ de 50 componentes, visto como un tensor $50\times1\times1$. Sus capas son `ConvTranspose2d` sin sesgo, todas con filtro $4\times4$: $(50\to256, s=1, p=0)$, $(256\to128, s=2, p=1)$, $(128\to64, s=2, p=1)$ y $(64\to3, s=2, p=1)$. Calcula el tamaño espacial tras cada capa y el número total de parámetros.
 #### Paso 1
 Con $x = s(y-1)+f-2p$. Capa 1: $1\cdot 0 + 4 - 0 = 4$. Capa 2: $2\cdot 3 + 4 - 2 = 8$. Capa 3: $2\cdot 7 + 4 - 2 = 16$. Capa 4: $2\cdot 15 + 4 - 2 = 32$. La salida es $3\times32\times32$.
 #### Paso 2
-Los parámetros de cada capa son $C_{in}\cdot C_{out}\cdot f^2$. Capa 1: $50\cdot256\cdot16 = 204\,800$. Capa 2: $256\cdot128\cdot16 = 524\,288$. Capa 3: $128\cdot64\cdot16 = 131\,072$. Capa 4: $64\cdot3\cdot16 = 3\,072$.
+Los parámetros de cada capa son $C_{in}\cdot C_{out}\cdot f^2$ (fórmula de parámetros: complemento que no sale del PDF). Capa 1: $50\cdot256\cdot16 = 204\,800$. Capa 2: $256\cdot128\cdot16 = 524\,288$. Capa 3: $128\cdot64\cdot16 = 131\,072$. Capa 4: $64\cdot3\cdot16 = 3\,072$.
 #### Paso 3
 Total: $204\,800 + 524\,288 + 131\,072 + 3\,072 = 863\,232$ parámetros. La primera capa "proyecta y reorganiza" el vector $z$ en un mapa de $4\times4$.
+
+### Problema: gradientes de una convolución transpuesta
+Con $W = \begin{bmatrix} 1 & -1 \\ 2 & 0 \end{bmatrix}$, $Y = \begin{bmatrix} 2 & 1 \\ 0 & 3 \end{bmatrix}$, $s=1$ y $p=0$, la salida $X$ es $3\times3$ y el gradiente de la pérdida respecto a ella es $\begin{bmatrix} 1 & 0 & 2 \\ 0 & 1 & 0 \\ 3 & 0 & 1 \end{bmatrix}$. Calcula $\partial L/\partial Y$ y $\partial L/\partial W$.
+#### Paso 1
+Entrada: $\partial L/\partial Y_{ij} = \sum_{a,b} W_{ab}\,\frac{\partial L}{\partial X_{i+a,\,j+b}}$. Da $Y_{00}$: $1\cdot1 + (-1)\cdot0 + 2\cdot0 + 0\cdot1 = 1$, $Y_{01}$: $1\cdot0 + (-1)\cdot2 + 2\cdot1 + 0\cdot0 = 0$, $Y_{10}$: $1\cdot0 + (-1)\cdot1 + 2\cdot3 + 0\cdot0 = 5$ y $Y_{11}$: $1\cdot1 + (-1)\cdot0 + 2\cdot0 + 0\cdot1 = 1$, es decir $\begin{bmatrix} 1 & 0 \\ 5 & 1 \end{bmatrix}$.
+#### Paso 2
+Filtro: $\partial L/\partial W_{ab} = \sum_{i,j} \frac{\partial L}{\partial X_{i+a,\,j+b}}\,Y_{ij}$. Da $W_{00}$: $1\cdot2 + 0\cdot1 + 0\cdot0 + 1\cdot3 = 5$, $W_{01}$: $0\cdot2 + 2\cdot1 + 0\cdot0 + 0\cdot3 = 2$, $W_{10}$: $0\cdot2 + 1\cdot1 + 3\cdot0 + 0\cdot3 = 1$ y $W_{11}$: $1\cdot2 + 0\cdot1 + 0\cdot0 + 1\cdot3 = 5$, es decir $\begin{bmatrix} 5 & 2 \\ 1 & 5 \end{bmatrix}$.
 
 ## 3. Autoencoders
 
@@ -104,9 +119,9 @@ Suma: $0{,}2231 + 0{,}1054 + 0{,}6931 = 1{,}0216$.
 Aunque la tercera componente se reconstruye de forma exacta ($x_3 = \hat{x}_3$), su BCE no es 0, porque con un objetivo intermedio el mínimo de la BCE vale $-[x\ln x + (1-x)\ln(1-x)]$ y no cero. El error cuadrático sí vale 0 ahí.
 
 ### Problema: penalización de dispersión con la divergencia KL
-En un autoencoder disperso con $\rho = 0{,}1$ y $\beta = 2$, dos unidades ocultas tienen estas activaciones sobre 4 muestras: la unidad A, $(0{,}2,\ 0,\ 0{,}1,\ 0{,}1)$, y la unidad B, $(0{,}9,\ 0{,}7,\ 0{,}8,\ 0{,}6)$. Calcula la penalización total, sin el término $\lambda\Omega(W)$.
+En un autoencoder disperso con $\rho = 0{,}1$ y $\beta = 2$, dos unidades ocultas tienen estas activaciones sobre 4 muestras: la unidad A, $(0{,}2,\ 0{,}05,\ 0{,}1,\ 0{,}05)$, y la unidad B, $(0{,}9,\ 0{,}7,\ 0{,}8,\ 0{,}6)$. Calcula la penalización total, sin el término $\lambda\Omega(W)$.
 #### Paso 1
-Activaciones medias: $\hat{\rho}_A = (0{,}2+0+0{,}1+0{,}1)/4 = 0{,}1$ y $\hat{\rho}_B = (0{,}9+0{,}7+0{,}8+0{,}6)/4 = 0{,}75$.
+Activaciones medias: $\hat{\rho}_A = (0{,}2+0{,}05+0{,}1+0{,}05)/4 = 0{,}1$ y $\hat{\rho}_B = (0{,}9+0{,}7+0{,}8+0{,}6)/4 = 0{,}75$.
 #### Paso 2
 Unidad A: $\hat{\rho}_A = \rho$, de modo que $\text{KL} = 0$.
 #### Paso 3
@@ -153,7 +168,7 @@ Que el muestreo es un nodo estocástico no diferenciable, de modo que el gradien
 En escribir el muestreo de forma determinista aislando el azar en una variable auxiliar: $z = \mu_\phi(x) + \sigma_\phi(x)\odot\epsilon$, con $\epsilon \sim \mathcal{N}(0,I)$ y $\odot$ el producto elemento a elemento. La aleatoriedad queda en $\epsilon$ y el gradiente fluye por $\mu_\phi$ y $\sigma_\phi$.
 
 ### ¿Qué derivadas parciales de $z$ da el truco de reparametrización?
-Con $z = \mu + \sigma\epsilon$: $\partial z/\partial\mu = 1$ y $\partial z/\partial\sigma = \epsilon$. Con $\epsilon$ tratado como una constante muestreada, el gradiente de la pérdida llega a $\mu$ y a $\sigma$ por la regla de la cadena.
+Con $z = \mu + \sigma\epsilon$: $\partial z/\partial\mu = 1$ y $\partial z/\partial\sigma = \epsilon$. Con $\epsilon$ tratado como una constante muestreada, el gradiente de la pérdida llega a $\mu$ y a $\sigma$ por la regla de la cadena. (Complemento que no sale del PDF.)
 
 ### Demostración: identidad fundamental $\log p_\theta(x) = \mathcal{L}_{ELBO} + D_{KL}(q_\phi\,\|\,p_\theta(z\mid x))$
 Demuestra la identidad y deduce que el ELBO es una cota inferior.
@@ -201,7 +216,7 @@ $$D_{KL} = \tfrac{1}{2}\left(\mu^2 + \sigma^2 - 1 - \ln\sigma^2\right)$$
 Con $\mu = 0$ y $\sigma = 1$ da 0, como debe ser. Para un vector latente con covarianza diagonal, la KL es la suma de esta expresión sobre las dimensiones.
 
 ### Problema: KL de un codificador gaussiano contra el prior
-Un codificador VAE con dos dimensiones latentes devuelve $\mu = (1,\ 0)$ y $\sigma = (0{,}5,\ 2)$. Calcula $D_{KL}(q_\phi(z\mid x)\,\|\,\mathcal{N}(0,I))$ y razona qué dimensión se parece más al prior.
+Un codificador VAE con dos dimensiones latentes devuelve $\mu = (1,\ 0)$ y $\sigma = (0{,}5,\ 2)$. Calcula $D_{KL}(q_\phi(z\mid x)\,\|\,\mathcal{N}(0,I))$ y razona qué dimensión se parece más al prior. (La forma cerrada de la KL es un complemento: se deduce en la demostración anterior y no sale del PDF.)
 #### Paso 1
 Dimensión 1: $\frac{1}{2}\left(1^2 + 0{,}5^2 - 1 - \ln0{,}25\right) = \frac{1}{2}(1 + 0{,}25 - 1 + 1{,}3863) = \frac{1}{2}(1{,}6363) = 0{,}8181$.
 #### Paso 2
@@ -209,10 +224,10 @@ Dimensión 2: $\frac{1}{2}\left(0^2 + 2^2 - 1 - \ln4\right) = \frac{1}{2}(0 + 4 
 #### Paso 3
 La covarianza es diagonal, de modo que las KL se suman: $0{,}8181 + 0{,}8069 = 1{,}625$ (los dos logaritmos se cancelan, porque $-\ln0{,}25 - \ln4 = 0$, y queda $\frac{1}{2}(1 + 0{,}25 + 4 - 2) = 1{,}625$).
 #### Paso 4
-Ninguna de las dos se parece al prior (ambas están alrededor de 0,8). La primera se desvía por la media y por una varianza menor que 1, la segunda solo por una varianza mayor que 1.
+La dimensión 2 se parece algo más al prior (0,8069 frente a 0,8181), aunque por muy poco, y ninguna de las dos está cerca de 0. La primera se desvía por la media y por una varianza menor que 1, y la segunda solo por una varianza mayor que 1.
 
 ### Problema: pasada completa de un VAE con reparametrización y gradientes
-Un VAE con una dimensión latente recibe $x = (1,\ 0)$ y su codificador devuelve $\mu = 0{,}4$ y $\sigma = 0{,}5$. Se muestrea $\epsilon = 1{,}2$. El decodificador es $\hat{x}_1 = \text{sig}(2z - 1)$ y $\hat{x}_2 = \text{sig}(-z)$. Calcula $z$, la pérdida (BCE más KL) y los gradientes de la pérdida respecto a $\mu$ y a $\sigma$.
+Un VAE con una dimensión latente recibe $x = (1,\ 0)$ y su codificador devuelve $\mu = 0{,}4$ y $\sigma = 0{,}5$. Se muestrea $\epsilon = 1{,}2$. El decodificador es $\hat{x}_1 = \text{sig}(2z - 1)$ y $\hat{x}_2 = \text{sig}(-z)$. Calcula $z$, la pérdida (BCE más KL) y los gradientes de la pérdida respecto a $\mu$ y a $\sigma$. (La forma cerrada de la KL y su derivada son un complemento: se deducen en la demostración de la KL gaussiana y no salen del PDF.)
 #### Paso 1
 Reparametrización: $z = \mu + \sigma\epsilon = 0{,}4 + 0{,}5\cdot1{,}2 = 1{,}0$.
 #### Paso 2
@@ -226,7 +241,6 @@ Gradiente respecto a $z$. Para una sigmoide con BCE, $\partial\,\text{BCE}/\part
 #### Paso 6
 Se suma el camino por el KL. Como $\partial z/\partial\mu = 1$, $\partial z/\partial\sigma = \epsilon = 1{,}2$, $\partial D_{KL}/\partial\mu = \mu = 0{,}4$ y $\partial D_{KL}/\partial\sigma = \sigma - 1/\sigma = -1{,}5$:
 $$\frac{\partial\mathcal{L}}{\partial\mu} = -0{,}8068 + 0{,}4 = -0{,}4068, \qquad \frac{\partial\mathcal{L}}{\partial\sigma} = -0{,}8068\cdot1{,}2 - 1{,}5 = -2{,}4682$$
-Se ha comprobado con diferencias finitas en numpy.
 
 ## 5. Redes generativas adversarias (GAN)
 
@@ -252,7 +266,7 @@ La de Jensen-Shannon: $V(D^*_G,G) = 2\,D_{JS}(p_{data}\,\|\,p_g) - 2\log2$. Su m
 ### ¿Cómo se define la divergencia de Jensen-Shannon?
 $D_{JS}(P\,\|\,Q) = \frac{1}{2}D_{KL}\!\left(P\,\Big\|\,\frac{P+Q}{2}\right) + \frac{1}{2}D_{KL}\!\left(Q\,\Big\|\,\frac{P+Q}{2}\right)$. Es simétrica, a diferencia de la KL.
 
-### ¿Qué limitaciones tiene una GAN vanilla basada en MLP, que motivan las DCGAN?
+### ¿Qué limitaciones tiene una GAN vanilla basada en MLP, que motivan las redes generativas adversarias convolucionales profundas (DCGAN)?
 Las capas totalmente conectadas pierden la topología espacial, el número de parámetros se dispara y el entrenamiento es muy inestable.
 
 ### ¿Qué pautas de arquitectura siguen las DCGAN?
@@ -262,7 +276,7 @@ Sustituir el pooling por convoluciones con paso (discriminador) y convoluciones 
 Una convolución transpuesta con filtro $4\times4$ que convierte $z$ (visto como $100\times1\times1$) en un mapa de $1024\times4\times4$. Cada uno de los 1024 filtros de salida tiene 100 núcleos $4\times4$, cada uno escalado por su componente $z_i$ y luego sumados.
 
 ### ¿Qué calcula la normalización por lotes (BatchNorm2d) en una capa convolucional?
-Para cada canal $c$ y de forma independiente, la media sobre el lote y las posiciones espaciales, $\mu_c = \frac{1}{B\,H\,W}\sum_{b,h,w}X_{b,c,h,w}$, y con ella normaliza.
+Para cada canal $c$ y de forma independiente, la media sobre el lote y las posiciones espaciales, $\mu_c = \frac{1}{B\,H\,W}\sum_{b,h,w}X_{b,c,h,w}$. Después normaliza con la varianza del canal, $\hat{X}=(X-\mu_c)/\sqrt{\sigma_c^2+\epsilon}$. (Complemento que no sale del PDF: la transparencia solo da la media. La capa añade además una escala y un desplazamiento aprendidos, $\gamma_c\hat{X}+\beta_c$.)
 
 ### ¿Qué es una LeakyReLU y cuál es su derivada?
 $\text{LeakyReLU}(x) = \max(\alpha x, x)$ para un $\alpha$ pequeño, de modo que las entradas negativas conservan una pendiente $\alpha$ en lugar de 0. Su derivada es 1 si $x > 0$ y $\alpha$ si $x < 0$.
@@ -279,8 +293,11 @@ Al empezar, $G$ es malo y $D(G(z))\approx0$. Entonces $\log(1-D)$ tiene una deri
 ### ¿Qué ajuste del optimizador Adam recomiendan las DCGAN?
 Tasa de aprendizaje $\eta = 0{,}0002$, $\beta_1 = 0{,}5$ en lugar del habitual 0,9 y $\beta_2 = 0{,}999$.
 
-### ¿Qué distribución de $z$ se prefiere y qué aprende el generador sobre él?
-Se prefiere $z\sim\mathcal{N}(0,I_d)$, más suave que la uniforme $\mathcal{U}(-1,1)^d$ de la publicación original. El generador aprende una aplicación suave del espacio latente (de 100 dimensiones) al espacio de imágenes.
+### ¿Qué distribución de $z$ se prefiere en una GAN y cuál usaba el artículo de las DCGAN?
+Se prefiere $z\sim\mathcal{N}(0,I_d)$, más suave que la $\mathcal{U}(-1,1)^d$ que usaba el artículo de las DCGAN.
+
+### ¿Qué aprende el generador de una GAN respecto al espacio latente?
+Una aplicación suave del espacio latente (de 100 dimensiones en las DCGAN) al espacio de imágenes.
 
 ### ¿Qué añade una GAN condicional (cGAN) a una GAN convencional?
 Control sobre lo que se genera. Tanto $G$ como $D$ reciben una información auxiliar $y$, que puede ser una clase (one-hot), un embedding de texto o una imagen (mapa de bordes, máscara, imagen de baja resolución).
@@ -292,11 +309,14 @@ Es el objetivo de la GAN con todas las probabilidades condicionadas a $y$.
 ### ¿Qué problema tiene concatenar la condición $y$ con $x$ y $z$ en la cGAN original?
 Es una mezcla ingenua que obliga al discriminador a gastar capacidad de canales al principio para propagar $y$. Al atravesar varias convoluciones con submuestreo, la señal de condición puede desvanecerse.
 
-### ¿Cómo combina la condición el discriminador de proyección?
+### ¿Cómo combina el discriminador de proyección de una cGAN la clase $y$ con la imagen $x$?
 Con una puntuación condicional y otra incondicional: $f(x,y) = v_y^\top\phi(x) + \psi(\phi(x))$. $\phi(x)$ es el vector de la penúltima capa, $v_y = E(y)$ es el embedding de la clase y $\psi$ es una capa lineal que juzga si la imagen parece real sea cual sea la clase.
 
 ### ¿Cómo funciona la normalización por lotes condicional (conditional batch norm)?
-Se normaliza el mapa de características y se reescala y desplaza con parámetros que dependen de la clase: $\text{cBN}(x,y) = \gamma(y) + \beta(y)\frac{x - \mathbb{E}[x]}{\sqrt{\text{Var}[x]+\epsilon}}$. Dos capas lineales pequeñas calculan $\gamma_c(y)$ y $\beta_c(y)$ por canal a partir del embedding $v_y$.
+Se normaliza el mapa de características y después se reescala con $\gamma(y)$ y se desplaza con $\beta(y)$, dos parámetros que dependen de la clase: $\text{cBN}(x,y) = \gamma(y)\,\dfrac{x - \mathbb{E}[x]}{\sqrt{\text{Var}[x]+\epsilon}} + \beta(y)$. Dos capas lineales pequeñas calculan $\gamma_c(y)$ y $\beta_c(y)$ por canal a partir del embedding $v_y$.
+
+### ¿En qué red se aplica el discriminador de proyección y en cuál la normalización por lotes condicional de una cGAN?
+La proyección combina la imagen $x$ con la clase $y$ en el discriminador. La normalización por lotes condicional combina el ruido $z$ con la clase $y$ en el generador.
 
 ### Demostración: el discriminador óptimo maximiza $a\log D + b\log(1-D)$ punto a punto
 Demuestra que $D^*_G(x) = \dfrac{p_{data}(x)}{p_{data}(x)+p_g(x)}$. Esta demostración la enuncia la transparencia como resultado de Goodfellow y el desarrollo es un complemento.
@@ -326,6 +346,15 @@ $$V(D^*_G,G) = 2\,D_{JS}(p_{data}\,\|\,p_g) - 2\log2$$
 #### Paso 5
 Como $D_{JS}\geq0$ y vale 0 solo si $p_g = p_{data}$, el mínimo global es $-2\log2$. Ahí $D^*_G = \frac{1}{2}$ y el discriminador no puede hacer mejor que adivinar.
 
+### Problema: tamaños y parámetros del discriminador de una DCGAN
+Una imagen $3\times64\times64$ pasa por cinco capas `Conv2d` sin sesgo con filtro $4\times4$: $(3\to128, s=2, p=1)$, $(128\to256, s=2, p=1)$, $(256\to512, s=2, p=1)$, $(512\to1024, s=2, p=1)$ y $(1024\to1, s=1, p=0)$. Calcula el tamaño espacial tras cada capa y el número total de parámetros.
+#### Paso 1
+Tamaño de una convolución normal: $\lfloor (n + 2p - f)/s\rfloor + 1$. Capa 1: $(64+2-4)/2+1 = 32$. Capa 2: 16. Capa 3: 8. Capa 4: 4. Capa 5: $(4-4)/1+1 = 1$. La salida es $1\times1\times1$.
+#### Paso 2
+Parámetros $C_{in}C_{out}f^2$. Capa 1: $3\cdot128\cdot16 = 6\,144$. Capa 2: $128\cdot256\cdot16 = 524\,288$. Capa 3: $256\cdot512\cdot16 = 2\,097\,152$. Capa 4: $512\cdot1024\cdot16 = 8\,388\,608$. Capa 5: $1024\cdot1\cdot16 = 16\,384$.
+#### Paso 3
+Total: $11\,032\,576$ parámetros. Las cuatro primeras capas reducen el lado a la mitad y la última lo convierte en un escalar que la sigmoide lleva a una probabilidad.
+
 ### Problema: pérdidas de la GAN con datos de un solo ejemplo
 En un paso de entrenamiento, el discriminador da $D(x) = 0{,}9$ a una muestra real y $D(G(z)) = 0{,}2$ a una generada. Calcula el valor de $V$, la pérdida BCE del discriminador y las dos pérdidas posibles del generador. Después compara los módulos de sus gradientes respecto a $D(G(z))$ con $D(G(z)) = 0{,}2$ y con $D(G(z)) = 0{,}01$.
 #### Paso 1
@@ -335,7 +364,7 @@ Generador saturante: minimiza $\ln(1 - D(G(z))) = \ln0{,}8 = -0{,}2231$. Generad
 #### Paso 3
 Módulo del gradiente respecto a $D(G(z))$. Para $\ln(1-D)$ es $\frac{1}{1-D}$. Para $\ln D$ es $\frac{1}{D}$. Con $D(G(z)) = 0{,}2$: $\frac{1}{0{,}8} = 1{,}25$ frente a $\frac{1}{0{,}2} = 5$.
 #### Paso 4
-Con $D(G(z)) = 0{,}01$ (generador muy malo): $\frac{1}{0{,}99} = 1{,}0101$ frente a $\frac{1}{0{,}01} = 100$. La versión saturante casi no aprende cuando más lo necesita y la no saturante da una señal fuerte, por eso se usa esta última.
+Con $D(G(z)) = 0{,}01$ (generador muy malo): $\frac{1}{0{,}99} = 1{,}0101$ frente a $\frac{1}{0{,}01} = 100$. Con $D(G(z)) = 0{,}01$ la versión saturante da un gradiente cien veces menor que la no saturante (1,0101 frente a 100). Por eso, cuando el generador es muy malo, aprende mucho más despacio con $\log(1-D)$ que con $\log D$. (Complemento que no sale del PDF: respecto al logit $a$ de la sigmoide, los gradientes valen $-D = -0{,}01$ y $-(1-D) = -0{,}99$, que es la causa real de la saturación.)
 
 ### Problema: discriminador óptimo, valor del juego y Jensen-Shannon con dos distribuciones discretas
 El dato puede tomar dos valores. Con $p_{data} = (0{,}5,\ 0{,}5)$ y $p_g = (0{,}9,\ 0{,}1)$, calcula $D^*_G$ en cada valor, $V(D^*_G,G)$ y comprueba la identidad $V = 2\,D_{JS} - 2\ln2$.
@@ -351,13 +380,13 @@ $D_{JS} = \frac{1}{2}(0{,}0872 + 0{,}1163) = 0{,}1017$. Entonces $2\cdot0{,}1017
 
 ## 6. Flujos normalizantes
 
-### ¿Qué limitaciones de los modelos anteriores resuelven los flujos normalizantes (normalizing flows, NF)?
+### ¿Qué limitaciones de VAE, GAN y modelos autorregresivos resuelven los flujos normalizantes (normalizing flows, NF)?
 El VAE solo aproxima la verosimilitud con el ELBO. La GAN no da densidad explícita y es inestable. Los autorregresivos dan verosimilitud exacta, pero sin espacio latente compacto y con muestreo secuencial lento. Los NF dan verosimilitud exacta, entrenamiento estable por máxima verosimilitud, muestreo paralelo rápido y un espacio latente invertible.
 
 ### ¿Cuál es la idea básica de un flujo normalizante?
 Transformar una distribución simple, como $z\sim\mathcal{N}(0,I)$, en la distribución de los datos mediante una función biyectiva (invertible y suave) $x = f(z)$.
 
-### ¿Qué dos cosas permite que $f$ sea invertible en un flujo normalizante?
+### ¿Qué dos operaciones hace posibles la invertibilidad de $f$ en un flujo normalizante?
 Generar: se muestrea $z$ y se evalúa $x = f(z)$ en una sola pasada. Y evaluar: se mapea una imagen real a su código, $z = f^{-1}(x)$, y se calcula su verosimilitud exacta $p(x)$.
 
 ### ¿Qué dice el teorema del cambio de variables para $x = f(z)$ invertible?
@@ -379,7 +408,7 @@ Se parte la entrada en dos mitades. La primera pasa sin cambios, $x_{1:d/2} = z_
 No, pueden ser redes arbitrariamente complejas. La inversa solo las evalúa hacia delante sobre $x_{1:d/2}$: $z_{d/2+1:d} = (x_{d/2+1:d} - t(x_{1:d/2}))\odot\exp(-s(x_{1:d/2}))$.
 
 ### ¿Cuál es el log-determinante de una capa de acoplamiento afín?
-La suma de las salidas de $s$ sobre la mitad que se transforma: $\sum_i s(z_{1:d/2})_i$. El jacobiano es triangular inferior, con unos y $\exp(s_i)$ en la diagonal.
+La suma de las componentes de la salida de $s$, que tiene una por cada variable de la segunda mitad: $\sum_i s(z_{1:d/2})_i$. El jacobiano es triangular inferior, con unos y $\exp(s_i)$ en la diagonal.
 
 ### Problema: cambio de variables en dos dimensiones
 Sea $z\sim\mathcal{N}(0,I_2)$ y la transformación $x_1 = 3z_1$, $x_2 = z_2 + z_1^2$. Calcula $p_X(x^*)$ para $z^* = (1,\ -1)$.
@@ -407,7 +436,7 @@ Inversa: $z_2 = (x_2 - t(x_1))\,e^{-s(x_1)} = (5{,}2974 - 2)\,e^{-0{,}5} = 3{,}2
 
 ## 7. Modelos de difusión
 
-### ¿Qué ventajas tienen los modelos de difusión (DDPM) frente a los anteriores?
+### ¿Qué ventajas tienen los modelos de difusión (denoising diffusion probabilistic models, DDPM) frente a las GAN y los flujos normalizantes?
 Entrenamiento estable por máxima verosimilitud (ELBO), sin generador ni discriminador adversarios, y sin restricciones de arquitectura para tener un determinante jacobiano tratable.
 
 ### ¿Cuál es la idea de un modelo de difusión para generar datos?
@@ -415,6 +444,9 @@ Descomponer la generación en muchos pasos pequeños de eliminación de ruido. C
 
 ### ¿Qué dos cadenas de Markov forman un modelo de difusión?
 Una cadena directa (forward) fija, $q(x_t\mid x_{t-1})$, que añade ruido gradualmente de $x_0$ a $x_T\sim\mathcal{N}(0,I)$. Y una cadena inversa (reverse) aprendida, $p_\theta(x_{t-1}\mid x_t)$, que elimina el ruido de $x_T$ hasta $x_0$.
+
+### ¿Cómo se factorizan la cadena directa y la inversa de un modelo de difusión?
+La directa es un producto de transiciones de Markov: $q(x_{1:T}\mid x_0) = \prod_{t=1}^{T} q(x_t\mid x_{t-1})$. La inversa parte del prior y también es un producto: $p_\theta(x_{0:T}) = p(x_T)\prod_{t=1}^{T} p_\theta(x_{t-1}\mid x_t)$, con $p(x_T) = \mathcal{N}(0,I)$.
 
 ### ¿Cuál es la transición de un paso del proceso directo?
 $q(x_t\mid x_{t-1}) = \mathcal{N}\!\left(\sqrt{1-\beta_t}\,x_{t-1},\ \beta_t I\right)$, es decir $x_t = \sqrt{1-\beta_t}\,x_{t-1} + \sqrt{\beta_t}\,\epsilon$ con $\epsilon\sim\mathcal{N}(0,I)$. Los $\beta_t\in(0,1)$ son la planificación (schedule) de varianza.
@@ -453,7 +485,7 @@ El error cuadrático medio entre el ruido verdadero y el predicho, $\mathcal{L}(
 Se parte de $x_T\sim\mathcal{N}(0,I)$ y, para $t = T,\dots,1$, se calcula $\epsilon_\theta$, la media $\mu_\theta$, se sortea $z\sim\mathcal{N}(0,I)$ (o $z = 0$ si $t = 1$) y se actualiza $x_{t-1} = \mu_\theta + \sigma_t z$. La salida es $x_0$.
 
 ### ¿Por qué en el último paso de inferencia no se añade ruido?
-Porque con $t = 1$ el resultado es la muestra final $x_0$ y se quiere el dato limpio, de modo que se toma $z = 0$ y $x_0 = \mu_\theta(x_1,1)$.
+Porque con $t = 1$ el resultado es la muestra final $x_0$ y se quiere el dato limpio, de modo que se toma $z = 0$ y $x_0 = \mu_\theta(x_1,1)$. (La razón es un complemento, el PDF solo da la regla.)
 
 ### Demostración: $q(x_t\mid x_0)$ es gaussiana con media $\sqrt{\bar{\alpha}_t}\,x_0$ y varianza $1-\bar{\alpha}_t$
 Demuestra por inducción que $x_t = \sqrt{\bar{\alpha}_t}\,x_0 + \sqrt{1-\bar{\alpha}_t}\,\epsilon$. La transparencia da el resultado sin desarrollo.
@@ -481,7 +513,7 @@ Salto directo: media $\sqrt{0{,}54}\cdot2 = 0{,}7348\cdot2 = 1{,}4697$ y varianz
 El ruido equivalente cumple $1{,}4697 + \sqrt{0{,}46}\,\epsilon = 1{,}3494$, de modo que $\epsilon = (1{,}3494 - 1{,}4697)/0{,}6782 = -0{,}1773$. Es una combinación de $\epsilon_1$ y $\epsilon_2$, y no uno de ellos.
 
 ### Problema: un paso de entrenamiento de un DDPM con estimación de $x_0$
-Con los mismos $\beta_1 = 0{,}1$, $\beta_2 = 0{,}4$, un dato $x_0 = 2{,}0$, el instante $t = 2$ y el ruido $\epsilon = -0{,}5$, construye $x_t$. La red predice $\epsilon_\theta = -0{,}2$. Calcula la pérdida y la estimación de $x_0$ a partir de la predicción, y compárala con la que daría un ruido perfecto.
+Con $\beta_1 = 0{,}1$, $\beta_2 = 0{,}4$, un dato $x_0 = 2{,}0$, el instante $t = 2$ y el ruido $\epsilon = -0{,}5$, construye $x_t$. La red predice $\epsilon_\theta = -0{,}2$. Calcula la pérdida y la estimación de $x_0$ a partir de la predicción, y compárala con la que daría un ruido perfecto.
 #### Paso 1
 $\bar{\alpha}_2 = 0{,}54$. $x_2 = \sqrt{0{,}54}\cdot2{,}0 + \sqrt{0{,}46}\cdot(-0{,}5) = 1{,}4697 - 0{,}3391 = 1{,}1306$.
 #### Paso 2
