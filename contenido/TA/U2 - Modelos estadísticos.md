@@ -3,7 +3,7 @@
 ## 1. Aprender de datos
 
 ### ¿Qué tipos de datos se distinguen para aprender a traducir?
-Monolingües (un solo idioma), multilingües (varios idiomas sin emparejar) y paralelos (pares que son traducción mutua). Los paralelos pueden ser de texto a texto, de voz a texto, de texto a voz o de voz a voz.
+Monolingües (un solo idioma), multilingües (textos en varios idiomas, sin marcar qué frase corresponde a cuál) y paralelos (pares que son traducción mutua). Los paralelos pueden ser de texto a texto, de voz a texto, de texto a voz o de voz a voz.
 
 ### ¿Qué tipo de datos hace falta para aprender un modelo de traducción?
 Datos paralelos, porque el modelo necesita ver qué frase de un idioma corresponde a qué frase del otro.
@@ -11,8 +11,8 @@ Datos paralelos, porque el modelo necesita ver qué frase de un idioma correspon
 ### Si se conociera el alineamiento de palabras de un corpus paralelo, ¿cómo se obtendría el diccionario probabilístico?
 Contando cuántas veces cada palabra origen está alineada con cada palabra destino y normalizando. Como el alineamiento no se conoce, hay que aprenderlo de los datos.
 
-### ¿Puede EM distinguir dos palabras que aparecen exactamente en las mismas frases del corpus?
-No. La verosimilitud es la misma si se intercambian, así que EM les da la misma probabilidad. El corpus no contiene esa información: con pocos datos, EM aprende coocurrencia y no traducción.
+### Si EM del modelo IBM 1 arranca de una distribución uniforme, ¿puede distinguir dos palabras origen que aparecen exactamente en las mismas frases?
+No. Intercambiar sus tablas $p(\cdot \mid v)$ no cambia la verosimilitud, así que EM les da la misma distribución. Pasa lo mismo con dos palabras destino que aparecen siempre en las mismas frases. El corpus no contiene esa información, de modo que con pocos datos EM aprende coocurrencia y no traducción.
 
 ## 2. Modelos basados en palabras
 
@@ -28,12 +28,17 @@ Porque $a$ es una función: asigna una sola posición origen a cada posición de
 ### ¿Por qué se suma sobre todos los alineamientos para calcular $P(y \mid x)$?
 Porque el alineamiento es una variable oculta: no se observa en los datos.
 
+### ¿Cómo se escribe $P(y \mid x)$ cuando el alineamiento $a$ es una variable oculta?
+Se suma sobre todos los alineamientos: $P(y \mid x) = P(I \mid x) \sum_a P(y, a \mid I, x)$, con $I$ la longitud de $y$.
+
 ### ¿Qué dos suposiciones hace el modelo IBM 1?
 1. La palabra destino depende solo de la palabra origen con la que está alineada, $p(y_i \mid x_{a_i})$.
 2. Todas las posiciones origen, incluida NULL, son igual de probables: $\frac{1}{J+1}$.
 
 ### ¿Cuál es la expresión de $P(y \mid x)$ en el modelo IBM 1?
-$$\begin{aligned}&P(y \mid x) \\ &\approx \frac{1}{(J+1)^I} \prod_{i=1}^{I} \sum_{j=0}^{J} p(y_i \mid x_j)\end{aligned}$$
+$$\begin{aligned}&P(y \mid x) \\ &\propto \frac{1}{(J+1)^I} \prod_{i=1}^{I} \sum_{j=0}^{J} p(y_i \mid x_j)\end{aligned}$$
+
+Se omite el factor $P(I \mid x)$, que no depende del alineamiento.
 
 ### ¿Por qué el modelo IBM 1 no tiene en cuenta el orden de las palabras?
 Porque la probabilidad de alinear es uniforme y no depende de la posición $i$ ni de lo ya alineado. Por tanto, dos traducciones con las mismas palabras en distinto orden reciben la misma probabilidad.
@@ -45,6 +50,9 @@ $$a_{nij} = \frac{p(y_{ni} \mid x_{nj})}{\sum_{j'} p(y_{ni} \mid x_{nj'})}$$
 
 ### ¿Qué calcula el paso M del entrenamiento del modelo IBM 1?
 La cuenta esperada de cada par (palabra origen $v$, palabra destino $u$), sumando $a_{nij}$ en todas las frases. Después normaliza para que $\sum_u p(u \mid v) = 1$.
+
+### En el corpus de cuatro frases inglés a euskera de clase, ¿qué aprende el IBM 1 sobre «the» tras 5 iteraciones?
+Que p(urdina | the) es 0,77, igual que p(urdina | blue), porque «the» y «blue» aparecen siempre juntas con «urdina». No aprende the a NULL, que sería la solución correcta, porque el corpus no contiene la información para separarlas.
 
 ### ¿Qué cambia el modelo IBM 2 respecto al 1?
 Que la probabilidad de alineamiento depende de la posición: $p(a_i \mid i, J, I)$ en lugar de ser uniforme. Se entrena con el mismo EM y una tabla más.
@@ -59,13 +67,14 @@ Una dependencia de primer orden: el alineamiento de una palabra depende del alin
 GIZA++, de Och. Los modelos IBM se publicaron en Brown et al. (1993).
 
 ### Demostración: en el modelo IBM 1 la suma sobre alineamientos se convierte en un producto de sumas
+Demuestra que $\sum_a \prod_i p(y_i \mid x_{a_i}) / (J+1)$ se puede calcular como un producto de sumas.
 #### Paso 1
 Con las dos suposiciones del modelo:
 
 $$\sum_a \prod_{i=1}^{I} \frac{1}{J+1}\, p(y_i \mid x_{a_i})$$
 
 #### Paso 2
-Cada $a_i$ varía de forma independiente entre $0$ y $J$. Al desarrollar el producto de sumas $\prod_i \sum_j f_i(j)$ salen exactamente todas las combinaciones $\sum_a \prod_i f_i(a_i)$. Con $I = 2$ y $J = 1$:
+Sea $f_i(j) = p(y_i \mid x_j)/(J+1)$. Cada $a_i$ varía de forma independiente entre $0$ y $J$, de modo que $a$ recorre todas las secuencias de $\{0,\dots,J\}^I$. Al desarrollar el producto de sumas $\prod_i \sum_j f_i(j)$ salen exactamente todas las combinaciones $\sum_a \prod_i f_i(a_i)$. Con $I = 2$ y $J = 1$:
 
 $$\begin{aligned}&(f_1(0) + f_1(1))(f_2(0) + f_2(1)) \\ &= f_1(0)f_2(0) + f_1(0)f_2(1) \\ &\quad + f_1(1)f_2(0) + f_1(1)f_2(1)\end{aligned}$$
 
@@ -98,7 +107,7 @@ $$p(\text{casa} \mid \text{house}) = \frac{5/6}{7/6} = \frac{5}{7} \approx 0{,}7
 
 $$p(\text{verde} \mid \text{house}) = \frac{2}{7} \approx 0{,}29$$
 
-En una sola iteración, house ya se inclina hacia casa, porque es la única palabra destino que aparece en las dos frases con house.
+En una sola iteración, house ya se inclina hacia casa, porque casa es la única palabra destino que aparece en las dos frases donde aparece house.
 
 ## 3. Modelos basados en frases
 
@@ -114,7 +123,7 @@ Generativos, con variables ocultas de segmentación y alineamiento, y heurístic
 3. Extraer todos los pares de frases consistentes con ese alineamiento.
 
 ### ¿Cuándo es consistente un par de frases con un alineamiento?
-Cuando ninguna palabra del par está alineada con una palabra de fuera del par. Las palabras sin alinear sí pueden quedar dentro.
+Cuando ninguna palabra del par está alineada con una palabra de fuera del par. Las palabras sin alinear sí pueden quedar dentro. Además, el par debe tener al menos un enlace dentro.
 
 ### ¿Por qué un mal alineamiento de palabras estropea la tabla de frases?
 Porque un enlace erróneo hace inconsistentes pares que serían correctos. Por ejemplo, si «the» y «blue» se alinean las dos con «azul», el par «blue / azul» no se puede extraer, porque «azul» está unida también a una palabra de fuera.
@@ -138,6 +147,9 @@ Decodificación multipila, un A* basado en programación dinámica, con poda de 
 ### En la decodificación multipila, ¿qué guarda una hipótesis?
 La cobertura de la frase origen (qué palabras se han traducido ya), el prefijo destino generado y su puntuación.
 
+### En la decodificación multipila, ¿qué hipótesis guarda cada pila y en qué orden?
+Las que tienen la misma cobertura de la frase origen, ordenadas de mayor a menor puntuación. Se expanden las que están arriba de cada pila.
+
 ### ¿Qué diferencia hay entre la poda por haz y la poda por histograma?
 La poda por haz descarta las hipótesis que se alejan demasiado de la mejor, o que quedan bajo un umbral. La poda por histograma limita el número de hipótesis de cada pila.
 
@@ -148,7 +160,7 @@ Origen «the red car» y destino «el coche rojo», con los enlaces the–el, re
 #### Paso 2
 «the / el»: su único enlace queda dentro. Es consistente.
 #### Paso 3
-«the red / el coche rojo»: para cubrir rojo hay que incluir coche, que está alineada con car, fuera del par por el lado inglés. No es consistente. Tampoco existe un par «the red / el … rojo» sin coche, porque las frases son secuencias contiguas.
+«the red / el coche rojo»: el lado español contiene coche, que está alineada con car, y car queda fuera de «the red». No es consistente. Tampoco sirve un par «the red / el … rojo» sin coche, porque una frase es una secuencia contigua.
 
 ## 4. Evaluación
 
@@ -177,6 +189,9 @@ Castiga las hipótesis más cortas que la referencia, que de otro modo tendrían
 
 $$BP = \begin{cases} 1 & \text{si } c > r \\ e^{1 - r/c} & \text{si } c \le r \end{cases}$$
 
+### Con varias referencias, ¿qué longitud $r$ se usa en la penalización por brevedad de BLEU?
+La de la referencia más próxima en longitud a la hipótesis.
+
 ### ¿Por qué BLEU se calcula sobre el corpus y no frase a frase?
 Porque en una frase suelta basta con que un $p_n$ sea 0 para que el logaritmo anule todo y BLEU valga 0, aunque la traducción sea casi perfecta. Sobre el corpus se suman aciertos y totales de todas las frases antes de dividir.
 
@@ -190,16 +205,25 @@ La frase origen. COMET es una métrica neuronal que compara origen, hipótesis y
 Un codificador multilingüe basado en XLM-RoBERTa, aplicado a la frase origen, la hipótesis y la referencia.
 
 ### ¿Qué diferencia hay entre el modelo estimador y el modelo de ranking de COMET?
-El estimador es un regresor que predice una puntuación de calidad y minimiza el error cuadrático medio contra juicios humanos. El de ranking aprende a dejar la hipótesis peor más lejos del ancla que la mejor, con una pérdida de tripleta.
+El estimador es un regresor que predice una puntuación de calidad y minimiza el error cuadrático medio contra juicios humanos. El de ranking aprende a dejar la hipótesis peor más lejos del ancla (el origen o la referencia) que la mejor, con una pérdida de tripleta.
+
+### ¿Cómo puntúa el modelo de ranking de COMET una única hipótesis $h$?
+Con $\hat{f} = 1/(1+f)$, donde $f$ es la media armónica de $d(s,h)$ y $d(r,h)$, las distancias de la hipótesis al origen y a la referencia.
 
 ### ¿Se pueden comparar directamente las puntuaciones de COMET y de BLEU?
-No. Tienen escalas distintas, y COMET tiende a dar valores comprimidos cerca de 1.
+No. Tienen escalas distintas. En el ejemplo de clase, COMET da 0,92 a «home is blue» y 0,99 a una traducción perfecta, mientras que BLEU separa mucho más ambas frases.
+
+### ¿Qué entradas usa COMET con referencia y cuáles COMET-Kiwi?
+COMET con referencia usa origen, hipótesis y referencia. COMET-Kiwi es de estimación de calidad y solo usa origen e hipótesis.
 
 ### ¿Qué es la estimación de calidad (QE)?
 Estimar la calidad de una traducción sin referencia, solo con la frase origen y la hipótesis. Un ejemplo es COMET-Kiwi.
 
-### ¿Para qué se usa la estimación de calidad?
-Para decidir si una traducción se publica tal cual o va a post-edición, avisar al lector de si fiarse, marcar las palabras que hay que editar, elegir el mejor de varios sistemas y filtrar datos paralelos mal alineados.
+### ¿Para qué se usa la estimación de calidad a nivel de frase?
+Para decidir si una traducción se publica tal cual, avisar al lector de si puede fiarse, filtrar las frases que no merecen post-edición y elegir la mejor entre varios sistemas.
+
+### ¿Para qué se usa la estimación de calidad a nivel de palabra y en producción?
+Para marcar las palabras que hay que editar, combinar segmentos de varios sistemas, filtrar bitexto web mal alineado y enviar a revisión humana las traducciones de baja confianza.
 
 ### ¿Cómo funciona la evaluación de adecuación y fluidez?
 Con dos escalas independientes de 5 puntos. La adecuación mide cuánto significado se conserva y la fluidez, la gramática, la naturalidad y el estilo. Su problema es la varianza entre anotadores.
@@ -208,13 +232,16 @@ Con dos escalas independientes de 5 puntos. La adecuación mide cuánto signific
 Con modelos como TrueSkill o Bradley-Terry, que convierten las preferencias A contra B en un ranking global. No dan una calidad absoluta.
 
 ### ¿Qué es la evaluación directa (DA)?
-Una escala continua de 0 a 100, estándar en WMT desde 2017. Cada puntuación se normaliza por anotador con la puntuación z, $z = (x - \mu) / \sigma$, para quitar su sesgo de escala.
+Una escala continua de 0 a 100, estándar en la campaña de evaluación WMT desde 2017. La puntuación bruta $x$ de cada anotador se normaliza con $z = (x - \mu)/\sigma$, donde $\mu$ y $\sigma$ son su media y su desviación típica, para quitar su sesgo de escala.
+
+### ¿Qué diferencia hay entre la DA bilingüe y la monolingüe?
+En la bilingüe el evaluador compara la traducción con la frase origen. En la monolingüe la compara con una referencia humana. COMET y BLEURT se entrenan para predecir la puntuación $z$.
 
 ### ¿Qué es MQM?
 Un protocolo de evaluación humana en el que el anotador identifica cada error, lo clasifica y le asigna una gravedad. Necesita traductores profesionales.
 
 ### ¿Qué categorías de error tiene la taxonomía MQM?
-Precisión (mala traducción, omisión o adición, contenido sin traducir), fluidez (gramática, ortografía, registro), terminología, y estilo y localización (fechas, monedas, unidades).
+Precisión (mala traducción, omisión o adición, contenido sin traducir), fluidez y estilo (gramática, ortografía y puntuación, registro poco idiomático), terminología, y estilo y localización (tono, fechas, monedas, unidades).
 
 ### ¿Qué pesos tienen los errores en la puntuación MQM?
 Un error menor pesa 1, uno mayor 5 y uno crítico entre 10 y 25.
@@ -238,6 +265,10 @@ Bigramas de la hipótesis: «the cat», «cat sat», «sat on» y «on mat». La
 La hipótesis es más corta: $c = 5$ y $r = 6$. Por tanto:
 
 $$BP = e^{1 - 6/5} = e^{-0{,}2} \approx 0{,}82$$
+#### Paso 4
+Trigramas: «the cat sat» y «cat sat on» están en la referencia y «sat on mat» no, de modo que $p_3 = 2/3$. 4-gramas: «the cat sat on» sí y «cat sat on mat» no, así que $p_4 = 1/2$. Por tanto:
+
+$$\text{BLEU} = 0{,}82 \cdot \left(1 \cdot \tfrac34 \cdot \tfrac23 \cdot \tfrac12\right)^{1/4} = 0{,}82 \cdot 0{,}707 \approx 0{,}58$$
 
 ### Problema: calcula la precisión de unigramas con recorte
 Hipótesis «the the the cat» y referencia «the cat sat on the mat».
@@ -245,6 +276,18 @@ Hipótesis «the the the cat» y referencia «the cat sat on the mat».
 En la hipótesis, the aparece 3 veces, pero en la referencia solo 2. Su recuento se recorta a 2.
 #### Paso 2
 cat aparece una vez en cada una y cuenta 1. Por tanto, $p_1 = (2 + 1)/4 = 3/4$.
+
+### Problema: calcula el BLEU de corpus de dos frases
+Referencias «the cat sat on the mat» y «my dog was white». Hipótesis «the cat sat on mat» y «my dog is white». Usa $N = 4$ y pesos uniformes.
+#### Paso 1
+Se suman aciertos y totales de cada orden $n$ en las dos frases, con recorte. Orden 1: $(5+3)/(5+4) = 8/9$. Orden 2: $(3+1)/(4+3) = 4/7$. Orden 3: $(2+0)/(3+2) = 2/5$. Orden 4: $(1+0)/(2+1) = 1/3$.
+#### Paso 2
+$r = 6 + 4 = 10$ y $c = 5 + 4 = 9$. Como $c < r$:
+
+$$BP = e^{1 - 10/9} = e^{-1/9} \approx 0{,}895$$
+
+#### Paso 3
+Media geométrica: $(8/9 \cdot 4/7 \cdot 2/5 \cdot 1/3)^{1/4} = (64/945)^{1/4} \approx 0{,}510$. Por tanto, $\text{BLEU} \approx 0{,}895 \cdot 0{,}510 \approx 0{,}46$.
 
 ### Problema: calcula la puntuación MQM de un segmento
 Un segmento de 20 palabras tiene dos errores menores y uno mayor. La puntuación es $\text{MQM} = 100 - \frac{\sum \text{pesos}}{L} \cdot 100$, con $L$ la longitud del segmento.

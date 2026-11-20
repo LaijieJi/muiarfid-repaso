@@ -5,8 +5,8 @@
 ### ¿Cómo define Wooldridge un agente?
 Un sistema informático capaz de actuar de forma autónoma en un entorno para alcanzar los objetivos que se le han delegado. Su ciclo es percibir, decidir y actuar.
 
-### ¿Qué significa que un agente sea flexible según Wooldridge?
-Que es reactivo, proactivo y social: interactúa con su entorno de forma flexible y robusta para cumplir sus objetivos.
+### ¿Qué tres capacidades forman la flexibilidad de un agente según Wooldridge?
+Reactividad, proactividad y capacidad social. Con ellas el agente interactúa con su entorno de forma robusta para cumplir sus objetivos.
 
 ### ¿Qué diferencia a un agente inteligente de un agente software cualquiera?
 Que funciona de forma fiable en un entorno que cambia deprisa y de forma impredecible.
@@ -42,7 +42,7 @@ Un sistema cuyo comportamiento se explica atribuyéndole creencias y deseos.
 El de primer orden tiene creencias y deseos, pero no sobre creencias y deseos. El de segundo orden los tiene sobre los suyos y sobre los de otros, como «Juan cree que Lola cree que llueve».
 
 ### Según McCarthy, ¿cuándo es más útil atribuir cualidades mentales a una máquina?
-Cuando no se conoce del todo su estructura. En una máquina sencilla y conocida, como un termostato, es posible pero aporta poco.
+Cuando no se conoce del todo su estructura. En una máquina de estructura conocida, como un termostato, atribuirlas es más sencillo, pero resulta menos útil.
 
 ### ¿Qué diferencia hay entre la resolución distribuida de problemas y los SMA?
 En la resolución distribuida, los nodos tienen tareas y conducta fijas y el diseño se centra en el comportamiento global. En un SMA, los agentes son autónomos, tienen información incompleta y deciden dinámicamente qué hacer y quién lo hace, sin control global.
@@ -68,7 +68,7 @@ Cuando hay un número fijo y finito de acciones y percepciones.
 Parcialmente observable, estocástico, secuencial, dinámico, continuo y multiagente. Es el caso más difícil en las seis.
 
 ### ¿Cómo clasifica el tema el entorno de la compra por Internet?
-No observable, parcialmente determinista, secuencial, semiestático, discreto y multiagente, salvo en las subastas.
+No observable, parcialmente determinista, secuencial, semiestático y discreto.
 
 ### ¿Cómo clasifica el tema el entorno del backgammon?
 Observable, no determinista, secuencial, semiestático, discreto y multiagente.
@@ -78,7 +78,7 @@ Un agente resuelve un crucigrama en papel. Clasifícalo según las seis propieda
 #### Paso 1
 Observable: ve todo el tablero y las definiciones. Determinista: escribir una palabra tiene un único efecto.
 #### Paso 2
-Secuencial y no episódico: cada palabra condiciona las casillas de las que se cruzan con ella.
+Secuencial y no episódico: cada palabra condiciona las casillas que comparte con las palabras que la cruzan.
 #### Paso 3
 Estático: nada cambia salvo lo que escribe el agente. Discreto: hay casillas y letras finitas. Agente individual: no hay nadie más.
 
@@ -121,11 +121,11 @@ Respuesta inmediata, sin problema de representación simbólica, sencillez, robu
 Les cuesta aprender de la experiencia, solo usan información local y a corto plazo, las interacciones entre muchas conductas son difíciles de entender y no hay metodología: se diseñan por prueba y error.
 
 ### Problema: aplica el algoritmo de selección de la arquitectura reactiva
-Conductas: $b_1$ (batería baja: volver a la base), $b_2$ (obstáculo delante: girar) y $b_3$ (siempre: explorar). Inhibición: $b_1 <_r b_2 <_r b_3$, donde $b_i <_r b_j$ significa que $b_i$ inhibe a $b_j$. ¿Qué hace el agente si percibe un obstáculo con batería normal, y si percibe un obstáculo con la batería baja?
+Conductas: $b_1$ (batería baja: volver a la base), $b_2$ (obstáculo delante: girar) y $b_3$ (siempre: explorar). Inhibición: $b_1 <_r b_2$ y $b_2 <_r b_3$, y la relación es transitiva, donde $b_i <_r b_j$ significa que $b_i$ inhibe a $b_j$. ¿Qué hace el agente si percibe un obstáculo con batería normal, y si percibe un obstáculo con la batería baja?
 #### Paso 1
 Obstáculo con batería normal: se disparan $b_2$ y $b_3$. $b_2$ no está inhibida por ninguna conducta disparada, porque $b_1$ no se ha disparado. El agente gira.
 #### Paso 2
-Obstáculo con batería baja: se disparan las tres. $b_1$ inhibe a las otras dos y nadie la inhibe a ella. El agente vuelve a la base.
+Obstáculo con batería baja: se disparan las tres. Nadie inhibe a $b_1$, de modo que gana. El agente vuelve a la base.
 #### Paso 3
 La prioridad la fija el orden de inhibición, no el orden en que se disparan las conductas.
 
@@ -137,10 +137,13 @@ Tiene un modelo simbólico explícito del mundo y decide mediante razonamiento l
 ### ¿Qué dos procesos forman el razonamiento práctico?
 La deliberación, que decide qué objetivos perseguir, y el razonamiento de medios y fines, que decide cómo alcanzarlos.
 
+### ¿Qué son las creencias, los deseos y las intenciones en un agente BDI?
+Las creencias son el conocimiento del agente sobre el entorno. Los deseos son sus metas. Las intenciones son los deseos a los que se compromete: dirigen sus acciones hacia las metas, persisten y influyen en las creencias.
+
 ### ¿Qué funciones cumplen las intenciones en un agente BDI?
 Dirigen el razonamiento de medios y fines, restringen las deliberaciones futuras, persisten en el tiempo e influyen en las creencias del razonamiento posterior.
 
-### ¿Por qué tres motivos abandona un agente BDI una intención?
+### ¿En qué tres casos abandona un agente BDI una intención?
 Porque ya la ha alcanzado, porque no la va a poder alcanzar o porque ha desaparecido la razón por la que la tenía.
 
 ### ¿Qué hacen las funciones `Brf`, `Opciones`, `Filtro` y `Ejecutar` de la formalización BDI?
@@ -156,6 +159,12 @@ IRMA (Bratman, 1988) como precursor, PRS (Georgeff y Lansky, 1987) como sistema,
 
 ### ¿Qué combina una arquitectura híbrida?
 Un subsistema deliberativo, con modelo simbólico y planes, y otro reactivo, para los estímulos que no necesitan deliberar. Se organiza en capas.
+
+### ¿Qué ventaja y qué inconveniente tienen las arquitecturas híbridas en conjunto?
+Ventaja: equilibran bien las conductas del agente, como la reactividad y la iniciativa. Inconveniente: falta de claridad conceptual y semántica, y hay muchas combinaciones de interacción entre capas.
+
+### ¿Cuántas pasadas puede tener una arquitectura de capas verticales?
+Una o dos. En una pasada el control va de la capa de percepción a la de acción. En dos, sube y vuelve a bajar.
 
 ### ¿Qué diferencia hay entre las capas horizontales y las verticales de una arquitectura híbrida?
 En las horizontales todas las capas están conectadas a sensores y actuadores y cada una sugiere acciones. En las verticales solo una capa tiene entrada y salida, y cada capa pasa el control a la siguiente.
@@ -203,6 +212,15 @@ Se genera el evento `-!g`. Si hay un plan para él, se ejecuta encima de la inte
 
 ### ¿Por qué se ejecuta un plan `+inicio` si `inicio.` es una creencia inicial?
 Porque las creencias iniciales generan su evento de adición al arrancar el agente.
+
+### ¿Qué partes tiene un plan de Jason?
+Una cabeza y un cuerpo. La cabeza es el evento disparador más un contexto, que son literales que deben ser consecuencia lógica de las creencias. El cuerpo es una secuencia de acciones y subobjetivos.
+
+### En Jason, ¿qué diferencia hay entre un objetivo de logro y uno de prueba?
+El de logro (`!g`) expresa un estado del mundo que el agente quiere conseguir. El de prueba (`?g`) se usa normalmente para recuperar información de la base de creencias.
+
+### ¿Qué significan `source(percept)` y `source(self)` en una creencia de Jason?
+`source(percept)` marca lo percibido del entorno. `source(self)` marca lo que el propio agente se ha dicho con una nota mental. Si viene de otro agente, la anotación lleva su nombre.
 
 ### ¿Qué hace `.send(robot, achieve, g)` en Jason?
 Delega en el agente `robot` el objetivo `g`. Con `tell` en lugar de `achieve`, le informaría de una creencia.

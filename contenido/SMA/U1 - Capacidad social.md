@@ -5,6 +5,15 @@
 ### ¿Qué es la capacidad social de un agente?
 Es su capacidad de interactuar con otros agentes mediante cooperación, coordinación y negociación. Como mínimo, exige saber comunicarse.
 
+### ¿Qué es la cooperación entre agentes?
+Trabajar juntos como un equipo para conseguir un objetivo compartido. Se necesita cuando ningún agente puede lograrlo solo o cuando cooperando se obtiene un mejor resultado, por ejemplo más rápido.
+
+### ¿Qué es la coordinación entre agentes?
+Gestionar las interdependencias entre actividades. Hace falta, por ejemplo, cuando varios agentes quieren usar un recurso que no se puede compartir.
+
+### ¿Qué es la negociación entre agentes?
+La capacidad de alcanzar acuerdos sobre temas de interés común. Suele implicar ofertas y contraofertas, con compromisos que asume cada parte.
+
 ### ¿Qué cuatro elementos intervienen en un acto de comunicación?
 El código, que son los signos y reglas con que se forma el mensaje. El canal, que es el soporte físico o tecnológico. El mensaje, que es la información. Y el contexto, que es el lugar y el momento.
 
@@ -30,7 +39,7 @@ Cuando la dinámica de un agente se ve perturbada por la influencia de otros. La
 Mediante acciones sobre el entorno, mediante una pizarra compartida o mediante paso de mensajes.
 
 ### ¿Cómo se comunican los agentes con una pizarra?
-Comparten una zona de trabajo común, sin comunicación directa entre ellos. Un moderador publica los subproblemas y decide a quién se asignan, y un despachador avisa de los cambios.
+Comparten una zona de trabajo común, sin comunicación directa entre ellos. En los sistemas más avanzados, un moderador publica los subproblemas y decide a quién se asignan, y un despachador avisa de los cambios.
 
 ### ¿Qué inconveniente tiene el modelo de pizarra?
 La estructura central es un cuello de botella cuando los agentes están repartidos por una red.
@@ -110,6 +119,12 @@ Que el receptor haga verdadera la expresión en su base de conocimiento. Es la f
 
 ### ¿Qué hace la performativa `advertise` de KQML?
 El emisor anuncia que está preparado para responder a una performativa. Es lo que hace un agente ante un facilitador para que lo encuentren.
+
+### ¿Qué hacen `evaluate` y `stream-about` en KQML?
+`evaluate` pide al receptor que evalúe una expresión. `stream-about` es la versión de respuesta múltiple de `ask-about`.
+
+### ¿Qué hacen `register`, `broadcast` y `recruit-one` en KQML?
+`register` indica que el emisor puede responder a las performativas de un agente. `broadcast` pide al receptor que envíe la performativa a todos los agentes conectados. `recruit-one` pide al receptor que consiga que algún agente adecuado conteste a la performativa.
 
 ### ¿Cómo es el protocolo `subscribe` de KQML?
 El emisor manda un `subscribe` y el receptor contesta con varios `reply`, uno por cada novedad.
@@ -202,17 +217,20 @@ Es un lenguaje basado en actos de habla cuya semántica se define con actitudes 
 ### ¿Qué diferencia hay entre `failure` y `not-understood` en FIPA ACL?
 `not-understood` indica que el receptor no ha entendido el mensaje. `failure` indica que el receptor intentó la acción pedida y no pudo realizarla.
 
-### ¿Por qué un solo acto comunicativo no es una conversación?
-Porque es el originador de una conversación o la consecuencia de otro acto previo. Un `request`, por ejemplo, espera saber si se acepta y, después, si la acción se ha hecho.
+### ¿Qué relación tiene un acto comunicativo con una conversación en FIPA ACL?
+Un acto suelto es el originador de una conversación o la consecuencia de otro acto previo. Un request, por ejemplo, espera saber si se acepta y, después, si la acción se ha hecho.
 
 ### ¿Cómo es la secuencia del protocolo FIPA-request?
 El iniciador manda `request`. El receptor contesta `not-understood`, `refuse` o `agree`. Tras un `agree`, llega un `failure`, un `inform-done` o un `inform-ref`.
 
 ### ¿En qué se diferencia FIPA-request-when de FIPA-request?
-En que el receptor espera a que se cumpla una precondición antes de realizar la acción, y solo entonces responde si la hace o falla.
+El receptor acepta con agree y espera a que se cumpla una precondición antes de realizar la acción. Cuando se cumple, informa de que la hace o de que falla.
 
-### ¿Para qué sirve FIPA-contract-net y cómo es su secuencia?
-Sirve cuando un agente quiere que se haga una acción, hay varios candidatos y se quiere minimizar una función de la tarea, como el precio. El iniciador manda `cfp` y cada candidato contesta `refuse`, `not-understood` o `propose` antes del plazo. Después manda `reject-proposal` a unos y `accept-proposal` a uno, y el elegido termina con `failure`, `inform-done` o `inform-ref`.
+### ¿Cuándo se usa FIPA-contract-net?
+Cuando un agente quiere que se haga una acción, hay varios candidatos y se quiere minimizar una función de la tarea, como el precio.
+
+### ¿Cómo es la secuencia de FIPA-contract-net?
+El iniciador manda cfp y cada candidato contesta refuse, not-understood o propose antes del plazo. Después manda reject-proposal a unos y accept-proposal a uno, y el elegido termina con failure, inform-done o inform-ref.
 
 ### ¿Qué añade FIPA-iterated-contract-net respecto a FIPA-contract-net?
 Varias rondas. Tras recibir las ofertas, el iniciador puede aceptar una, rechazarlas todas o emitir un `cfp` revisado, que abre otra ronda.
@@ -226,16 +244,27 @@ En ambos, el broker envía la petición a un conjunto de agentes. En brokering e
 ### ¿Cómo funciona FIPA-subscribe?
 El iniciador manda un `subscribe` para que le avisen cada vez que se cumpla una condición. El receptor responde con un `inform` por cada vez que se cumple.
 
+### Problema: traza una subasta inglesa y una holandesa con los mismos postores
+Tres postores valoran un palé en 60, 70 y 90 euros. Cada uno acepta un precio mientras no supere su valoración. (a) Subasta inglesa que empieza en 50, sube de 10 en 10 y termina cuando solo queda un postor. ¿Quién gana y a qué precio? (b) Subasta holandesa que empieza en 100, baja de 10 en 10 con un mínimo de 60, y gana el primero que acepta. ¿Quién gana y a qué precio? (c) ¿Qué ocurre en la holandesa si las valoraciones son 40, 50 y 55?
+#### Paso 1
+Inglesa. Con 50 aceptan los tres y con 60 también, porque 60 no supera ninguna valoración. Con 70 abandona el de 60 y aceptan el de 70 y el de 90. Con 80 abandona el de 70.
+#### Paso 2
+Solo queda el de 90, así que gana y paga 80. En cada subida el iniciador emite un `cfp` con el precio nuevo.
+#### Paso 3
+Holandesa. Con 100 nadie acepta, porque supera todas las valoraciones. Con 90 acepta el de 90, que es el primero, y paga 90.
+#### Paso 4
+Con valoraciones 40, 50 y 55 nadie acepta entre 100 y 60. Al llegar al precio mínimo sin ofertas, la subasta termina sin venta. En las dos subastas gana el de mayor valoración, pero paga 80 en la inglesa y 90 en la holandesa.
+
 ### Problema: traza una ronda de FIPA-contract-net y su versión iterada
-Un iniciador `I` quiere contratar el transporte de un palé y minimizar el precio. Consulta a cuatro transportistas `P`, `Q`, `R` y `S`. `P` ofrece 48 euros, `Q` ofrece 52, `R` ofrece 45 y `S` rechaza porque no tiene camión libre. ¿A quién acepta `I` y qué manda al resto? Supón ahora que `I` usa en su lugar la versión iterada y, en vez de aceptar, emite un `cfp` revisado que pide menos de 45 euros. `P` ofrece 41, `Q` ofrece 44 y `R` no mejora su oferta. ¿Cómo termina?
+Un iniciador `I` quiere contratar el transporte de un palé y minimizar el precio. Consulta a cuatro transportistas `P`, `Q`, `R` y `S`. `P` ofrece 48 euros, `Q` ofrece 52, `R` ofrece 45 y `S` rechaza porque no tiene camión libre. ¿A quién acepta `I` y qué manda al resto? Supón ahora que `I` usa en su lugar la versión iterada y, en vez de aceptar, emite un `cfp` revisado que pide menos de 45 euros. `P` ofrece 41, `Q` ofrece 44 y `R` contesta `refuse` porque no puede bajar de 45. ¿Cómo termina?
 #### Paso 1
 `I` manda un `cfp` a los cuatro. `P`, `Q` y `R` contestan `propose` con 48, 52 y 45. `S` contesta `refuse`.
 #### Paso 2
 Se minimiza el precio. La oferta mínima es 45, de `R`. `I` manda `accept-proposal` a `R` y `reject-proposal` a `P` y `Q`. `S` ya había rechazado, así que no recibe nada.
 #### Paso 3
-Con la versión iterada, `I` no cierra la ronda y emite un `cfp` revisado que pide menos de 45 euros. `P` y `Q` mejoran con `propose` de 41 y 44, mientras que `R` no mejora la suya.
+Con la versión iterada, `I` no cierra la ronda y emite un `cfp` revisado que pide menos de 45 euros. `P` y `Q` mejoran con `propose` de 41 y 44, mientras que `R` contesta `refuse`, de modo que ya no compite.
 #### Paso 4
-La mejor oferta de la segunda ronda es 41, de `P`. `I` manda `accept-proposal` a `P` y `reject-proposal` a `Q` y a `R`. Al final, `P` envía `inform-done` si entrega el palé o `failure` si no puede.
+La mejor oferta de la segunda ronda es 41, de `P`. `I` manda `accept-proposal` a `P` y `reject-proposal` a `Q`. `R` no recibe nada, igual que `S` en la primera ronda. Al final, `P` envía `inform-done` si entrega el palé o `failure` si no puede.
 
 ## 6. Comunicación en Jason
 
@@ -284,4 +313,4 @@ El agente `bob` cree `puerta(abierta)[source(ana), source(luz)]`. Ana ejecuta, e
 #### Paso 3
 `achieve` crea el evento `+!cerrar(puerta)[source(ana)]`. Ana le delega ese objetivo y un plan de `bob` puede mirar la anotación para decidir si actúa.
 #### Paso 4
-Al final, `bob` tiene `puerta(abierta)[source(luz)]` y `temp(20)[source(ana)]`, y un evento pendiente de objetivo `cerrar(puerta)`.
+Al final, `bob` tiene `puerta(abierta)[source(luz)]` y `temp(20)[source(ana)]`, y el evento `+!cerrar(puerta)[source(ana)]` pendiente de tratar, además del evento de adición de creencia que genera el `tell`.

@@ -3,7 +3,7 @@
 ## 1. Motivación
 
 ### ¿Qué es la post-edición (PE)?
-Corregir a mano la salida de un sistema de traducción automática. Es un uso de la TA que crece porque abarata la traducción profesional: la máquina produce un borrador y una persona lo revisa.
+Corregir a mano la salida de un sistema de traducción automática. La máquina produce un borrador y una persona lo revisa. La diapositiva señala que su uso crece cada año.
 
 ### ¿Qué tipo de contenido impulsa la demanda de traducción de voz y simultánea?
 El contenido audiovisual en streaming, como la televisión, las conferencias y las reuniones en línea.
@@ -31,7 +31,7 @@ Warren Weaver.
 A la de los enfoques basados en conocimiento (reglas), entre 1960 y 2000 aproximadamente.
 
 ### ¿A qué era pertenecen los modelos IBM y GIZA++?
-A la estadística basada en palabras. Los modelos IBM son de 1989 a 1995 y GIZA++ es la herramienta que los entrena, de la etapa de 1995 a 2005.
+A la estadística basada en palabras. Los modelos IBM son de 1989 a 1995. GIZA++ es la herramienta de Och que los entrena, y la diapositiva la sitúa en 1995 a 2005, junto con los transductores de estados finitos.
 
 ### ¿A qué era pertenece Moses?
 A la estadística basada en frases, entre 2005 y 2015 aproximadamente.
@@ -50,12 +50,12 @@ No. Las eras se solapan: los modelos basados en frases se usaron hasta 2015 y la
 ### En el marco estadístico, ¿qué textos del idioma destino son traducciones posibles de una frase $x$?
 Todos. No hay traducciones correctas e incorrectas, sino más y menos probables según $P(y \mid x)$.
 
-### ¿Cuál es la regla de decisión de la traducción estadística?
+### En traducción automática estadística, con $x$ la frase origen e $y$ una frase destino, ¿cuál es la regla de decisión?
 Elegir la traducción más probable:
 
 $$\hat{y} = \arg\max_y P(y \mid x)$$
 
-### ¿De qué se aprende $P(y \mid x)$?
+### En traducción automática estadística, ¿de qué se aprende $P(y \mid x)$, la probabilidad de la frase destino $y$ dada la origen $x$?
 De texto paralelo, es decir, de pares de frases que son traducción mutua.
 
 ### ¿Qué diferencia hay entre traducción automática (TA) y traducción de voz (ST)?
@@ -92,8 +92,9 @@ Porque cada uno estima cosas distintas con modelos aproximados, y cada aproximac
 Porque hay infinitas frases $y$ posibles y no se pueden enumerar. Hace falta una búsqueda aproximada.
 
 ### Demostración: el enfoque generativo da la misma regla de decisión que el directo
+Parte de la regla directa $\hat{y} = \arg\max_y P(y \mid x)$ y demuestra que equivale a la regla generativa.
 #### Paso 1
-Se aplica el teorema de Bayes dentro del argmax:
+Se aplica el teorema de Bayes dentro del argmax, de modo que $\hat{y} = \arg\max_y \frac{P(x \mid y)\,P(y)}{P(x)}$. Es decir:
 
 $$P(y \mid x) = \frac{P(x \mid y)\,P(y)}{P(x)}$$
 
@@ -103,6 +104,7 @@ $x$ es fija, porque es la frase que se quiere traducir. Por tanto, el denominado
 $$\hat{y} = \arg\max_y P(x \mid y)\,P(y)$$
 
 ### Demostración: el enfoque conjunto da la misma regla de decisión que el directo
+Demuestra que maximizar $P(x, y)$ da la misma traducción que maximizar $P(y \mid x)$.
 #### Paso 1
 Se factoriza la probabilidad conjunta:
 
@@ -111,7 +113,7 @@ $$P(x, y) = P(y \mid x)\,P(x)$$
 #### Paso 2
 Igual que en el generativo, $P(x)$ no depende de $y$ y sale del argmax:
 
-$$\begin{aligned}&\arg\max_y P(y \mid x)\,P(x) \\ &= \arg\max_y P(y \mid x)\end{aligned}$$
+$$\begin{aligned}\arg\max_y P(x, y) &= \arg\max_y P(y \mid x)\,P(x) \\ &= \arg\max_y P(y \mid x)\end{aligned}$$
 
 ### Problema: elige la traducción de «el perro negro» con el enfoque generativo
 Candidatas: $y_1$ = «the black dog» y $y_2$ = «the dog black». El modelo de traducción no tiene en cuenta el orden de las palabras y da $P(x \mid y_1) = P(x \mid y_2) = 0{,}05$. El modelo de lenguaje da $P(y_1) = 2 \cdot 10^{-5}$ y $P(y_2) = 4 \cdot 10^{-9}$.
