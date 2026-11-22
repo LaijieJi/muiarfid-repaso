@@ -2,15 +2,6 @@
 
 ## 1. Introducción
 
-### ¿Qué dos redes convolucionales pioneras se estudian en esta unidad y qué aportó cada una?
-LeNet (1998, Yann LeCun) se desarrolló para el conjunto MNIST de dígitos. AlexNet (2012, Alex Krizhevsky) se aplicó a ImageNet y desencadenó la revolución del aprendizaje profundo.
-
-### ¿En qué red se introdujo la regularización por dropout que se usa hoy de forma generalizada?
-Se introdujo junto con AlexNet.
-
-### ¿Qué red inspiró a LeNet?
-El Neocognitron de Fukushima.
-
 ### ¿Qué papel tienen las capas de pooling en una red convolucional típica?
 Alternan con las capas convolucionales y reducen el tamaño espacial de los mapas de activación.
 
@@ -22,31 +13,8 @@ Convolución (1 a 6 canales, filtro 5×5), ReLU y max pooling 2×2, convolución
 ### ¿Por qué la primera capa lineal de la LeNet de clase tiene 256 entradas?
 Porque el último mapa tiene 16 canales de 4×4 y $16 \cdot 4 \cdot 4 = 256$. El tamaño sale de $28 \to 24$ (convolución 5×5), $\to 12$ (pooling), $\to 8$ (convolución 5×5), $\to 4$ (pooling).
 
-### ¿Cuántos parámetros tiene la primera convolución de la LeNet (1 a 6 canales, filtro 5×5, con sesgo)?
-Cada uno de los 6 filtros tiene $1 \cdot 5 \cdot 5 = 25$ pesos y un sesgo. En total $6 \cdot 25 + 6 = 156$.
-
 ### ¿Cuántos parámetros tiene en total la LeNet de clase con MNIST?
 44 426. Convolución 1: $6 \cdot 25 + 6 = 156$. Convolución 2: $16 \cdot 6 \cdot 25 + 16 = 2416$. Lineal 256 a 120: $256 \cdot 120 + 120 = 30\,840$. Lineal 120 a 84: $120 \cdot 84 + 84 = 10\,164$. Lineal 84 a 10: $84 \cdot 10 + 10 = 850$. El pooling y la ReLU no tienen parámetros.
-
-### ¿Qué cambio se hizo en clase respecto a la LeNet original y qué precisión dio en MNIST?
-Se usaron ReLU en lugar de sigmoides. La precisión en test fue del 98,7 %.
-
-## 3. AlexNet
-
-### ¿Cómo se adaptó AlexNet a MNIST en clase?
-La primera convolución pasa a tener 1 canal de entrada, filtro 3×3 y padding 1. Antes del clasificador se usa un average pooling adaptativo a 1×1 y el clasificador queda como dropout 0,5, lineal 256 a 128, ReLU y lineal 128 a 10. La precisión fue del 99,2 %.
-
-### ¿Qué capas convolucionales y de pooling tiene la AlexNet de torchvision que se usa en clase con MNIST?
-Cinco convoluciones de 64, 192, 384, 256 y 256 canales con filtros 3×3 (con padding 1, en la primera), 5×5 (padding 2), 3×3, 3×3 y 3×3 (padding 1), todas con ReLU. Hay tres max pooling de ventana 3×3 y paso 2, tras la primera, la segunda y la quinta convolución.
-
-### ¿Por qué el entrenamiento de AlexNet sobre MNIST se hizo con minilotes?
-Para evitar errores de memoria de la GPU (VRAM). Con toda la base de datos en un solo lote las activaciones intermedias no caben, mientras que la LeNet, mucho más pequeña, sí se entrenó con lote completo.
-
-### ¿Por qué el clasificador de la AlexNet adaptada tiene 256 entradas?
-Porque la última convolución produce 256 canales y el pooling adaptativo reduce cada uno a 1×1. Con 28×28 de entrada el tamaño espacial es: conv1 28, pooling 13, conv2 13, pooling 6, conv3, conv4 y conv5 6, pooling 2. El mapa final es $256 \times 2 \times 2$ y el pooling adaptativo lo promedia a 1×1 sea cual sea su tamaño.
-
-### ¿Cuántos parámetros tiene la AlexNet adaptada a MNIST de clase?
-2 481 226. Convoluciones: $640 + 307\,392 + 663\,936 + 884\,992 + 590\,080 = 2\,447\,040$. Clasificador: $256 \cdot 128 + 128 = 32\,896$ y $128 \cdot 10 + 10 = 1290$. Pooling, ReLU y dropout no tienen parámetros.
 
 ## 4. Convolución
 
@@ -70,17 +38,8 @@ La suma de todos los elementos de $U$, porque $\partial y_{ij} / \partial b = 1$
 ### ¿Cómo se calcula $\partial L / \partial X$ en una convolución válida, dado $U = \partial L / \partial Y$?
 $\frac{\partial L}{\partial X} = W_{\text{rot}180} \circledast U_{\text{padded}}$, donde $U_{\text{padded}}$ es $U$ con $f_h-1$ filas de ceros arriba y abajo y $f_w-1$ columnas de ceros a izquierda y derecha, y $W_{\text{rot}180}$ es $W$ girado 180 grados.
 
-### ¿Por qué hay que girar el filtro 180 grados y rellenar $U$ con ceros al calcular $\partial L / \partial X$?
-Porque $x_{mn}$ aparece en $y_{ij}$ con el peso $w_{m-i,\,n-j}$, de modo que $\frac{\partial L}{\partial x_{mn}} = \sum_{ij} u_{ij}\, w_{m-i,n-j}$. Los índices de $W$ van hacia atrás y por eso el filtro se gira. Los ceros de $U$ cubren los índices que quedan fuera de rango, y hacen que el resultado tenga el tamaño de $X$.
-
 ### ¿Cómo se convierte una convolución en un producto matricial con unfold?
 Se extraen los parches de $X$ en una matriz $P$ con un parche por fila, de tamaño $(y_h y_w) \times (f_h f_w)$. Con $w = \text{vec}(W)$ por filas, la salida es $y = P w + b\,\mathbf{1}$.
-
-### En la forma matricial de la convolución, $y = Pw + b\mathbf{1}$ con $P$ la matriz de parches y $w = \text{vec}(W)$, ¿cuánto valen los gradientes con $u = \text{vec}(U)$, $U = \partial L/\partial Y$?
-$\frac{\partial L}{\partial w} = P^\top u$, $\frac{\partial L}{\partial b} = u^\top \mathbf{1}$ y $\frac{\partial L}{\partial x} = \text{Fold}(w\, u^\top)$.
-
-### En la convolución con unfold de PyTorch, ¿qué hace Fold y por qué suma en lugar de copiar?
-Fold es la transpuesta de Unfold como operación lineal: coloca cada elemento de un parche en su posición de la imagen y suma lo que cae en la misma casilla. Suma porque un píxel que está en varios parches influye en varias salidas, de modo que su gradiente es la suma de las contribuciones.
 
 ### Problema: cálculo de los tres gradientes de una convolución con datos pequeños
 Sea $X = \begin{bmatrix} 1 & 2 & 0 \\ 3 & 1 & 2 \\ 0 & 4 & 1 \end{bmatrix}$, $W = \begin{bmatrix} 2 & 1 \\ 0 & -1 \end{bmatrix}$, $b = 1$, sin padding y con paso 1. El gradiente que llega a la salida es $U = \begin{bmatrix} 1 & 2 \\ 0 & -1 \end{bmatrix}$. Calcula $Y$, $\partial L/\partial W$, $\partial L/\partial b$ y $\partial L/\partial X$, y comprueba el primero con la forma matricial.
@@ -130,14 +89,8 @@ Con unfold, los parches por filas son $P = \begin{bmatrix} 1 & 2 & 3 & 1 \\ 2 & 
 ### ¿Qué es el padding y para qué se usa?
 Es rodear la imagen con ceros antes de convolucionar. Sirve para que la salida no encoja y para que los píxeles del borde participen en tantas ventanas como los del centro.
 
-### ¿Qué tamaño tiene la salida de una convolución con padding $p_h$, $p_w$ y filtro $f_h \times f_w$, con paso 1?
-$y_h = x_h + 2p_h - f_h + 1$ y $y_w = x_w + 2p_w - f_w + 1$. Se añaden $p_h$ filas arriba y otras $p_h$ abajo, y $p_w$ columnas a cada lado.
-
 ### ¿Cuánto padding da una convolución "same" y por qué solo funciona bien con filtro impar?
-Una convolución "same" conserva el tamaño y exige $2p_h = f_h - 1$ y $2p_w = f_w - 1$. Con filtro impar, $p = (f-1)/2$ es entero y el relleno es simétrico. Con filtro par haría falta medio píxel y el relleno sería desigual.
-
-### ¿Cuánto vale la salida de una convolución "same" con un filtro 3×3 de unos sobre la imagen de 0 a 8 por filas?
-La imagen es $\begin{bmatrix} 0 & 1 & 2 \\ 3 & 4 & 5 \\ 6 & 7 & 8 \end{bmatrix}$ y la salida es $\begin{bmatrix} 8 & 15 & 12 \\ 21 & 36 & 27 \\ 20 & 33 & 24 \end{bmatrix}$. Cada elemento es la suma de la ventana 3×3 centrada, contando los ceros del borde, de modo que la esquina vale $0+1+3+4 = 8$.
+Una convolución "same" conserva el tamaño y exige $2p_h = f_h - 1$ y $2p_w = f_w - 1$. Con filtro impar, $p = (f-1)/2$ es entero y el relleno es simétrico. Con filtro par haría falta medio píxel y el relleno sería desigual. (Complemento: con paso $s$ y relleno $p=(f-1)/2$, la fórmula de la salida da $\lceil x/s\rceil$ por dimensión. T02 define "same" solo con paso 1.)
 
 ## 6. Strides
 
@@ -148,9 +101,6 @@ Es el salto con el que se desplaza el filtro: $s_h$ filas y $s_w$ columnas entre
 $$y_h = \left\lfloor \frac{x_h + 2p_h - f_h + s_h}{s_h} \right\rfloor = \left\lfloor \frac{x_h + 2p_h - f_h}{s_h} \right\rfloor + 1$$
 
 Y lo mismo para el ancho con $p_w$, $f_w$ y $s_w$.
-
-### ¿Cómo se relaciona una convolución con paso $s$ con la misma convolución con paso 1?
-Es un submuestreo: se obtiene quedándose con una de cada $s$ posiciones de la salida con paso 1, empezando por la primera.
 
 ### ¿Qué ocurre si $x + 2p - f$ no es múltiplo del paso?
 La división se redondea hacia abajo y las últimas filas o columnas de la entrada que no completan una ventana no se leen. Por ejemplo, con $x = 8$, $f = 3$, $p = 0$ y $s = 2$ salen 3 ventanas y la columna 7 nunca se usa.
@@ -199,9 +149,6 @@ La entrada es $C \times x_h \times x_w$. El filtro es $C \times f_h \times f_w$,
 ### ¿Qué forma tiene el tensor de pesos si hay $C$ canales de entrada y $D$ de salida?
 $D \times C \times f_h \times f_w$. Cada canal de salida $d$ usa su propio filtro $C \times f_h \times f_w$ y su propio sesgo.
 
-### ¿Qué forma tiene la salida de una convolución con $C$ canales de entrada y $D$ de salida?
-$D \times y_h \times y_w$, un mapa por cada filtro: $Y_d = b_d + \sum_c W_{d,c} \circledast X_c$.
-
 ### ¿Cuántos parámetros tiene una capa convolucional con $C$ canales de entrada, $D$ de salida, filtro $f_h \times f_w$ y sesgo?
 $D \cdot C \cdot f_h \cdot f_w + D$. No depende del tamaño de la imagen, a diferencia de una capa lineal.
 
@@ -237,6 +184,23 @@ Se aplica $D \cdot C \cdot f_h f_w + D$.
 #### Paso 4
 (d) La entrada tiene $3 \cdot 32 \cdot 32 = 3072$ valores y la salida $8 \cdot 28 \cdot 28 = 6272$. La capa lineal necesita $3072 \cdot 6272 + 6272 = 19\,273\,856$ parámetros, unas 31 700 veces más que los 608 de la convolución.
 
+### Problema: tamaños de un bloque con conexión residual y con concatenación
+La entrada de un bloque es $16@36\times25$ (canales, alto y ancho). La rama principal tiene dos convoluciones $3\times3$ con 32 filtros y relleno "same", la primera con paso 2 y la segunda con paso 1. Calcula el tamaño de la rama principal. El atajo es una convolución $1\times1$ sin relleno y con sesgo. Decide su paso y su número de filtros para SUMAR (conexión residual) y para CONCATENAR (estilo Inception, con 16 filtros en el atajo), y da el tamaño final de cada caso y los parámetros del atajo.
+#### Paso 1
+Con "same" y filtro $3\times3$ el relleno es $p=1$. Con la primera convolución, de paso 2, $y=\lfloor(x+2p-f)/s\rfloor+1$ da
+
+$$y_h=\lfloor(36+2-3)/2\rfloor+1=17+1=18\qquad y_w=\lfloor(25+2-3)/2\rfloor+1=12+1=13$$
+
+que son $\lceil36/2\rceil$ y $\lceil25/2\rceil$. La segunda, de paso 1, conserva el tamaño. La rama principal da $32@18\times13$.
+#### Paso 2
+Sumar exige el mismo número de canales, el mismo alto y el mismo ancho. El atajo identidad da $16@36\times25$, que no vale: faltan canales y sobra resolución. Hace falta una convolución $1\times1$ con paso 2 y 32 filtros. Sin relleno, $y_h=\lfloor(36-1)/2\rfloor+1=18$ y $y_w=\lfloor(25-1)/2\rfloor+1=13$, así que da $32@18\times13$.
+#### Paso 3
+Parámetros de esa convolución del atajo: $32\cdot16\cdot1\cdot1+32=512+32=544$.
+#### Paso 4
+Suma elemento a elemento de $32@18\times13$ y $32@18\times13$: el bloque da $32@18\times13$, sin cambiar el número de canales.
+#### Paso 5
+Concatenar solo exige que coincidan alto y ancho, y los canales se apilan. El atajo aún necesita paso 2 para llegar a $18\times13$, pero puede tener cualquier número $D$ de filtros (el enunciado fija $D=16$). Con $D=16$ el atajo es $16@18\times13$ y tiene $16\cdot16+16=272$ parámetros. El bloque da $(32+16)@18\times13=48@18\times13$. (Complemento: T02 no trata la concatenación ni el atajo con convolución, pero es la forma habitual de combinar ramas.)
+
 ## 8. MaxPooling
 
 ### ¿Cómo se define el max pooling con ventana $f_h \times f_w$ y paso 1?
@@ -245,20 +209,8 @@ $y_{ij} = \max_{0 \le u < f_h,\; 0 \le v < f_w} x_{i+u,\,j+v}$, con salida $y_h 
 ### ¿Qué paso usa el max pooling estándar y qué tamaño de salida da?
 El paso es igual al tamaño de la ventana, $(s_h, s_w) = (f_h, f_w)$, de modo que las ventanas no se solapan. La salida es $y_h = \lfloor (x_h - f_h)/s_h \rfloor + 1$ y lo mismo para el ancho.
 
-### ¿Cuántos parámetros tiene una capa de max pooling?
-Ninguno. Solo toma el máximo de cada ventana.
-
-### ¿Qué le pasa al número de canales en una capa de pooling?
-Se conserva. El pooling se aplica a cada canal de forma independiente, de modo que $Y_c = \text{MaxPool2d}(X_c)$.
-
 ### ¿Cómo se propaga el gradiente hacia atrás en el max pooling?
 Con $u_{ij} = \partial L/\partial y_{ij}$, cada $u_{ij}$ pasa solo a la posición que fue el máximo de su ventana, y el resto de la ventana recibe cero. Formalmente, $\frac{\partial L}{\partial x_{mn}} = \sum_{ij} u_{ij}\, \mathbb{1}[(m,n) = \arg\max \text{ de la ventana } (i,j)]$.
-
-### ¿Qué gradiente recibe un elemento que es el máximo de varias ventanas solapadas en un max pooling?
-La suma de los $u_{ij}$ de todas esas ventanas. Con ventanas que no se solapan, como en el pooling estándar, cada elemento está en una sola ventana y recibe a lo sumo un $u_{ij}$. Es lo que pasa en el max pooling 3×3 de paso 2 de AlexNet, donde las ventanas contiguas comparten una fila y una columna.
-
-### ¿Qué es el global max pooling y cuánto vale su gradiente?
-Es un max pooling con ventana del tamaño de un canal entero, así que da un valor por canal: $y_c = \max_{u,v} x_{c,u,v}$. El gradiente $u_c$ que llega a ese canal va solo a la posición del máximo de cada canal y es cero en el resto.
 
 ### Problema: max pooling 2×2 estándar, hacia delante y hacia atrás
 Sea $X = \begin{bmatrix} 1 & 3 & 2 & 0 \\ 4 & 2 & 1 & 5 \\ 0 & 6 & 3 & 3 \\ 2 & 1 & 7 & 4 \end{bmatrix}$ con max pooling 2×2 de paso 2. Calcula $Y$ y, dado $U = \begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}$, calcula $\partial L / \partial X$.
@@ -295,9 +247,6 @@ $y_{ij} = \frac{1}{f_h f_w} \sum_{u=0}^{f_h-1} \sum_{v=0}^{f_w-1} x_{i+u,\,j+v}$
 
 ### ¿Cómo se propaga el gradiente hacia atrás en el average pooling?
 Con $u_{ij} = \partial L/\partial y_{ij}$, cada $u_{ij}$ se reparte a partes iguales entre los elementos de su ventana, $\frac{u_{ij}}{f_h f_w}$ para cada uno. Un elemento recibe la suma de lo que le toca de todas las ventanas que lo contienen: $\frac{\partial L}{\partial x_{mn}} = \frac{1}{f_h f_w} \sum_{i,j \text{ con } x_{mn} \in \text{ventana}(i,j)} u_{ij}$.
-
-### ¿Qué diferencia hay entre el gradiente del max pooling y el del average pooling?
-En el max pooling el gradiente de cada ventana va a un único elemento, el máximo. En el average pooling se reparte a partes iguales entre todos los elementos de la ventana, así que ninguno queda en cero.
 
 ### ¿Cuánto vale el gradiente de un global average pooling sobre un canal de $x_h \times x_w$?
 Cada elemento del canal recibe $\frac{u_c}{x_h x_w}$, porque todos influyen por igual en la media. Por ejemplo, con un canal de 3 elementos y $u_c = 1$, cada uno recibe $1/3$.
@@ -339,3 +288,6 @@ El factor de reescalado es $\frac{1}{1-0{,}2} = 1{,}25$.
 Entrenamiento: la segunda entrada pasa a $0$ y las otras se multiplican por 1,25, de modo que $(2 \cdot 1{,}25,\; 0,\; 10 \cdot 1{,}25) = (2{,}5,\; 0,\; 12{,}5)$.
 #### Paso 3
 Evaluación: la salida es la identidad, $(2, 6, 10)$.
+
+### ¿Por qué el dropout mejora la generalización?
+En cada paso de entrenamiento apaga unidades al azar, de modo que ninguna neurona puede apoyarse en que otras concretas estén presentes (co-adaptación) y debe aprender rasgos útiles por sí sola. Además, cada paso entrena una subred distinta, de modo que el resultado se parece a promediar un conjunto de subredes. (Complemento: T02 presenta el dropout como una capa de regularización y describe su comportamiento, pero no da esta explicación.)

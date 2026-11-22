@@ -2,42 +2,11 @@
 
 ## 1.1 Predicción estructurada
 
-### ¿Qué es la predicción no estructurada?
-Es aquella en la que la salida $y$ es un único valor: una etiqueta de $\{1,\dots,K\}$ o un número real. La función de predicción $f:\mathcal{X}\to\mathbb{R}$ asigna una hipótesis $y=f(x)$ a cada observación $x$.
-
-### ¿Qué tres tareas son predicción no estructurada y qué salida tiene cada una?
-| Tarea | Salida |
-|---|---|
-| Clasificación binaria | $y\in\{-1,1\}$ |
-| Clasificación multiclase | $y\in\{1,\dots,K\}$ |
-| Regresión | $y\in\mathbb{R}$ |
-
 ### ¿Qué es la predicción estructurada?
 Es la predicción en la que la hipótesis $y\in\mathcal{Y}$ es un objeto complejo con estructura, como una secuencia, un árbol de análisis o un grafo. La función $f:\mathcal{X}\to\mathcal{Y}$ asigna ese objeto a cada observación $x$.
 
 ### ¿Qué diferencia hay entre predicción estructurada y no estructurada si la entrada puede ser cualquier objeto en ambas?
 La diferencia está solo en la salida. La observación $x\in\mathcal{X}$ puede ser texto, imagen o señal en los dos casos. En la no estructurada $y$ es un número o una etiqueta, mientras que en la estructurada $y$ es un objeto como una secuencia, un árbol o un grafo.
-
-### ¿Por qué no basta con clasificadores como regresión logística, SVM o redes neuronales cuando la salida es un árbol?
-Porque estos algoritmos predicen una salida no estructurada. Con árboles o grafos el espacio de salidas es mucho más grande y tiene estructura interna, así que hace falta un modelo que la aproveche.
-
-### ¿Qué entrada y qué salida tienen la traducción automática y el análisis sintáctico?
-| Tarea | Entrada | Salida |
-|---|---|---|
-| Traducción automática | Secuencia de texto | Secuencia de texto |
-| Análisis sintáctico | Secuencia de texto | Árbol de análisis |
-
-### ¿Qué entrada y qué salida tienen el reconocimiento automático del habla y el reconocimiento de texto manuscrito?
-El reconocimiento del habla recibe una señal de voz y devuelve el texto transcrito, es decir, una secuencia. El reconocimiento de texto manuscrito recibe imágenes y también devuelve el texto transcrito.
-
-### ¿Qué entrada y qué salida tienen el análisis de escenas y el reconocimiento de expresiones matemáticas?
-Ambos reciben imágenes. El análisis de escenas devuelve un grafo con la disposición de los objetos de la escena. El reconocimiento de expresiones matemáticas devuelve grafos e hipergrafos que describen la expresión.
-
-### ¿Qué estructuras de salida aparecen en las tareas de procesamiento del lenguaje natural?
-Etiquetado de categorías gramaticales y extracción de información producen secuencias. El análisis sintáctico produce árboles. La traducción automática produce frases o grafos de palabras.
-
-### ¿Qué estructuras de salida aparecen en visión, habla, bioinformática y robótica?
-La visión produce frases o grafos de relaciones (análisis de escenas) y frases o grafos de palabras (texto manuscrito). El habla produce transcripciones, ya sean frases o grafos de palabras, y señal de audio en la síntesis. La bioinformática produce árboles o grafos (estructura de proteínas) y la robótica produce secuencias de acciones (planificación).
 
 ### ¿Por qué buscar $f(x)=y$ directamente en $\mathcal{Y}$ suele ser intratable?
 Porque $\mathcal{Y}$ suele ser potencialmente infinito. No se puede recorrer ni evaluar todos los objetos de salida posibles para quedarse con el mejor.
@@ -45,22 +14,10 @@ Porque $\mathcal{Y}$ suele ser potencialmente infinito. No se puede recorrer ni 
 ### ¿Cuál es la solución estructural al problema de que $\mathcal{Y}$ sea enorme?
 Suponer una estructura concreta en $\mathcal{Y}$ y definir un modelo $\mathcal{M}$ que la caracterice, de modo que el conjunto de hipótesis queda reducido a $\mathcal{Y}(\mathcal{M})\subseteq\mathcal{Y}$. La predicción pasa a ser $f(x)=y\in\mathcal{Y}(\mathcal{M})$.
 
-### ¿Qué ventaja da restringir las hipótesis a un subconjunto $\mathcal{Y}(\mathcal{M})\subseteq\mathcal{Y}$ definido por un modelo?
-Según el modelo $\mathcal{M}$ elegido, la solución se puede encontrar en tiempo polinómico. Por eso la elección del modelo es la decisión central de la predicción estructurada.
-
 ## 1.2 Predicción de secuencias
-
-### ¿Qué es una secuencia en predicción de secuencias y qué ejemplos hay?
-Un texto es una secuencia de palabras o incluso de letras. Una locución hablada es una secuencia de vectores de parámetros. Un vídeo es una secuencia de fotogramas.
 
 ### ¿Qué son los autómatas finitos aceptores y para qué se usan?
 Son representaciones compactas de conjuntos regulares sobre las que se busca de forma eficiente. Se usan para localizar patrones, segmentar en unidades (tokenización) y comprimir.
-
-### ¿Qué son los transductores de estados finitos y para qué se usan?
-Son representaciones compactas de relaciones binarias racionales, que se pueden buscar y combinar de forma eficiente. Se usan, por ejemplo, en diccionarios y en reglas dependientes del contexto.
-
-### ¿Qué añaden los autómatas ponderados a los autómatas finitos y qué ejemplos da el profesor?
-Añaden pesos, que suelen codificar la incertidumbre (probabilidades). Los modelos de lenguaje de $n$-gramas y los modelos ocultos de Markov (HMM) son ejemplos.
 
 ### ¿En qué se distinguen autómata aceptor, transductor y autómata ponderado?
 | Modelo | Qué representa | Ejemplo de uso |
@@ -84,9 +41,6 @@ Sí. La definición toma un conjunto de estados iniciales $I\subseteq Q$, y cada
 ### En el dibujo de un autómata ponderado, ¿qué significan la etiqueta $a/1$ de un arco y la etiqueta $q/2$ de un estado?
 El arco consume el símbolo $a$ con peso 1. Un estado con etiqueta $q/2$ es el estado $q$ con peso final 2, y se dibuja con doble círculo por ser final.
 
-### ¿Qué es OpenFst?
-Una biblioteca de código abierto en C++, desarrollada en Google, para transductores de estados finitos ponderados. Es el entorno que cita el profesor en esta introducción.
-
 ## 1.3 Análisis sintáctico
 
 ### ¿Qué es el análisis sintáctico visto como problema de búsqueda?
@@ -95,20 +49,8 @@ Dada una cadena $x\in\Sigma^*$ y una gramática $G$, hay que encontrar un árbol
 ### ¿Qué es el rendimiento (yield) de un árbol de análisis?
 Es la cadena que se obtiene al leer las hojas del árbol de izquierda a derecha. Cada árbol de análisis de $x$ tiene rendimiento $x$.
 
-### ¿Qué tipo de salida produce un analizador sintáctico para una frase como «Pierre Vinken, 61 years old, will join the board…»?
-Un árbol de análisis con etiquetas de categoría en las hojas y nodos internos que agrupan sintagmas como NP, VP o PP. El ejemplo de la clase es una frase del corpus de Marcus et al. (1993) que empieza por «Pierre Vinken, 61 years old, will join the board…».
-
-### ¿Por qué se usan modelos gramaticales para predecir árboles?
-Son el modelo más simple y natural para estructuras de árbol y tienen un marco formal bien conocido. Además, son compactos (pocos parámetros libres) y se comportan bien frente a la ambigüedad.
-
-### ¿Qué ventaja tienen las gramáticas independientes del contexto para el lenguaje natural?
-Representan bien las dependencias a largo plazo de las restricciones sintácticas y semánticas del lenguaje natural.
-
 ### ¿Cuál es la definición formal de una gramática independiente del contexto (CFG)?
 $G=(\Sigma,N,S,P)$ con $\Sigma$ el conjunto de terminales, $N$ el de no terminales con $N\cap\Sigma=\emptyset$, $S\in N$ el símbolo inicial y $P$ el conjunto de reglas $A\to\alpha$ con $A\in N$ y $\alpha\in(N\cup\Sigma)^*$.
-
-### ¿Qué significa "independiente del contexto" en una regla $A\to\alpha$?
-Que el lado izquierdo es un único no terminal $A$. Por tanto, $A$ se puede reescribir por $\alpha$ sin importar qué símbolos tiene alrededor.
 
 ### ¿Cuándo se dice que $\delta A\gamma$ deriva directamente $\delta\alpha\gamma$?
 Cuando existe una regla $(A\to\alpha)\in P$, con $\delta,\gamma\in(N\cup\Sigma)^*$. Se escribe $\delta A\gamma\Rightarrow\delta\alpha\gamma$ y consiste en aplicar una regla a un solo no terminal.
@@ -131,9 +73,6 @@ En una, el sintagma preposicional se une a «stars» mediante $NP\to NP\ PP$, de
 ### ¿Cuándo está una gramática en forma normal de Chomsky (FNC)?
 Cuando toda regla es de la forma $A\to BC$, con $A,B,C\in N$, o de la forma $A\to b$, con $b\in\Sigma$. CKY exige esta forma.
 
-### ¿Por qué el algoritmo CKY necesita la gramática en FNC?
-Porque solo sabe combinar dos casillas (regla $A\to BC$) y rellenar la diagonal con terminales (regla $A\to b$). Una regla con tres símbolos o una regla unaria entre no terminales no encaja en sus bucles.
-
 ### ¿Qué calcula el algoritmo CKY?
 Una tabla $t$ de análisis. Su invariante es $A\in t[i,i+l]$ si y solo si $A\overset{*}{\Rightarrow}x_{i+1}\dots x_{i+l}$, o sea, $A$ genera la subcadena de longitud $l$ que empieza tras la posición $i$.
 
@@ -146,17 +85,11 @@ Para cada $i$ de $0$ a $T-1$ se pone en $t[i,i+1]$ todo no terminal $A$ con una 
 ### ¿Cómo se rellena una casilla $t[i,i+l]$ con $l\ge 2$ en CKY?
 Para cada punto de corte $k=1,\dots,l-1$ se añade todo $A$ con regla $A\to BC$ tal que $B\in t[i,i+k]$ y $C\in t[i+k,i+l]$. Se prueban todos los cortes y se acumulan los resultados.
 
-### ¿En qué orden se recorren las casillas en CKY y por qué?
-Por longitud $l$ creciente, de 2 a $T$, y dentro de cada longitud por $i$. Así, cuando se rellena una casilla, ya están completas las dos subcasillas más cortas que necesita.
-
 ### ¿Cuándo acepta CKY una frase?
 Cuando $S\in t[0,T]$, es decir, el símbolo inicial genera la frase entera. Si en esa casilla hay otros no terminales pero no $S$, la frase no pertenece a $L(G)$.
 
 ### ¿Por qué el coste de CKY es cúbico en la longitud de la frase?
 Por los tres bucles anidados: la longitud $l$, la posición $i$ y el corte $k$ recorren cada uno del orden de $T$ valores. Dentro de cada combinación hay que mirar además las reglas de la gramática.
-
-### ¿Significa una casilla vacía en CKY que la frase no pertenece al lenguaje?
-No. Una casilla vacía solo dice que ningún no terminal genera esa subcadena. La frase se rechaza únicamente si $S\notin t[0,T]$, y puede aceptarse aunque haya casillas vacías por el camino.
 
 ### ¿Puede una casilla de CKY contener varios no terminales?
 Sí. Un mismo tramo puede ser generado por varios no terminales, por ejemplo $S$ y $A$ a la vez. Hay que guardar todos porque cualquiera puede ser el lado izquierdo de una regla en una casilla superior.
@@ -169,9 +102,6 @@ Que hay dos análisis distintos del mismo tramo con ese no terminal. En el ejemp
 
 ### ¿Cómo se pasa de reconocer a analizar con CKY?
 Guardando, en cada entrada, la regla y las dos entradas hijas que la produjeron. Al terminar, se parte de una entrada $S$ de $t[0,T]$ y se desciende siguiendo los punteros. Si hay varias entradas $S$, hay varios árboles.
-
-### ¿Cuántas reglas usa un árbol de análisis en FNC de una frase de $T$ palabras?
-$2T-1$ reglas, porque hay $T$ reglas léxicas $A\to b$ y $T-1$ reglas binarias $A\to BC$. Es una comprobación útil del resultado de un análisis a mano.
 
 ### Problema: CKY con una gramática de oraciones simples en FNC
 Sea la gramática en FNC con símbolo inicial $S$:

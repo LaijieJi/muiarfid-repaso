@@ -2,16 +2,10 @@
 
 ## 1. Introduction
 
-### ¿Qué es el Transformer vanilla?
-Es la arquitectura de red neuronal presentada en el artículo de 2017 «Attention Is All You Need». Su aplicación original fue la traducción automática neuronal, y es la base de los modelos de lenguaje actuales.
-
 ### ¿Qué dos bloques grandes forman el Transformer original?
 Un codificador (encoder), que convierte la secuencia de entrada en una secuencia de vectores, y un decodificador (decoder), que genera la secuencia de salida consultando al codificador. Ambos son pilas de $N$ capas idénticas.
 
 ## 2. Architecture
-
-### ¿Qué piezas componen la implementación del Transformer (Annotated Transformer 2025) del curso?
-Un embedding con codificación posicional para la entrada, otro igual para la salida, el codificador, el decodificador y un generador. El generador es la proyección lineal final que pasa el vector del decodificador a una distribución sobre el vocabulario.
 
 ### ¿Qué valores de hiperparámetros usa el artículo original?
 $d_{model} = 512$, $N = 6$ capas en codificador y en decodificador, $h = 8$ cabezas de atención y probabilidad de dropout $P_{drop} = 0{,}1$.
@@ -19,22 +13,13 @@ $d_{model} = 512$, $N = 6$ capas en codificador y en decodificador, $h = 8$ cabe
 ### ¿Qué tamaño tiene la capa oculta de la red feed-forward de cada capa?
 $d_{ff} = 4\, d_{model}$. En el modelo de juguete de clase con $d_{model} = 2$ la capa oculta tiene 8 neuronas, y en el original con $d_{model} = 512$ tiene 2048.
 
-### ¿Qué forma tiene la entrada de las capas del codificador y del decodificador?
-Una matriz $n \times d_{model}$, con $n$ vectores (uno por token) de dimensión $d_{model}$. Todas las subcapas conservan esa forma, y por eso se pueden apilar y sumar con conexiones residuales.
-
 ## 3. Neural Machine Translation
-
-### ¿Cómo entra un texto en el Transformer?
-Cada token es un índice entero del vocabulario. La capa de embedding lo convierte en un vector de dimensión $d_{model}$, de modo que el texto pasa a ser una secuencia de vectores $n \times d_{model}$.
 
 ### ¿Qué hace el generador al final del modelo?
 Aplica una transformación lineal sin sesgo de $d_{model}$ a $|V|$ (tamaño del vocabulario de salida) sobre el vector del decodificador, y después un log-softmax. El resultado es el log de la probabilidad de cada token como siguiente token.
 
 ### ¿Cómo genera el Transformer una traducción token a token en inferencia?
 Codifica la entrada una sola vez (la salida del codificador se llama memory). Después parte de una salida con un solo token, el 0, y repite: decodifica toda la salida generada hasta ahora con máscara causal, aplica el generador al último vector, elige el token (por ejemplo, el de mayor probabilidad) y lo añade a la salida.
-
-### ¿Por qué en cada paso de inferencia solo se usa el último vector de la salida del decodificador?
-Porque con máscara causal el vector de la posición $t$ resume los tokens $1 \dots t$, y es el que predice el token $t+1$. Los vectores anteriores ya sirvieron para predecir tokens que se conocen.
 
 ### Problema: del vector del decodificador al siguiente token
 El decodificador entrega, en la última posición, el vector $h = (1, -1)$ con $d_{model} = 2$. El generador tiene un vocabulario de 3 tokens y matriz de pesos (una fila por token) $W_g = \begin{pmatrix} 1 & 0 \\ 0 & 1 \\ 1 & 1 \end{pmatrix}$. Calcula las probabilidades, el log-softmax y el token elegido por la regla greedy.
@@ -64,21 +49,6 @@ $$P_{pos,2i} = \sin\!\left(\frac{pos}{10000^{2i/d_{model}}}\right), \quad P_{pos
 ### ¿Qué hay que multiplicar antes de sumar la codificación posicional?
 El embedding se multiplica por $\sqrt{d_{model}}$. Es un error típico sumar $P$ directamente a $X$ sin escalar.
 
-### En la codificación posicional, ¿qué indican $pos$ e $i$?
-$pos$ es la posición del token en la secuencia (fila de $P$, empezando en 0). $i$ numera los pares de columnas, de modo que las columnas $2i$ y $2i+1$ llevan el seno y el coseno de la misma frecuencia.
-
-### ¿Cómo cambia la frecuencia de la codificación posicional al avanzar por las columnas?
-Disminuye. El denominador $10000^{2i/d_{model}}$ crece con $i$, así que los primeros pares oscilan rápido con la posición y los últimos cambian muy despacio.
-
-### ¿Cuánto vale la fila de la posición 0 de la codificación posicional?
-Alterna ceros y unos: $(0, 1, 0, 1, \dots)$, porque $\sin 0 = 0$ y $\cos 0 = 1$ para todas las frecuencias.
-
-### ¿Qué fila de la codificación posicional corresponde a la posición $pos$ cuando $d_{model} = 2$?
-Solo hay un par ($i = 0$) con denominador $10000^0 = 1$, de modo que la fila de la posición $pos$ es $(\sin pos, \cos pos)$ con $pos$ en radianes.
-
-### ¿Qué diferencia hay entre codificación posicional fija y entrenable?
-La fija se calcula con senos y cosenos sin parámetros, que es la del artículo. La entrenable es una tabla de parámetros que se aprende con el resto del modelo. En el código de clase se elige con `pe_type`.
-
 ### Problema: suma la codificación posicional a un embedding
 Con $d_{model} = 4$, el embedding de dos tokens es $X = \begin{pmatrix} 0{,}25 & -0{,}5 & 0{,}5 & 0 \\ 0 & 0{,}5 & -0{,}25 & 0{,}75 \end{pmatrix}$. Calcula $PE(X)$.
 #### Paso 1
@@ -101,9 +71,6 @@ Cada query $q_i$ es un token cuyo valor se quiere predecir. Cada par $(k_j, v_j)
 ### ¿Qué dimensiones tienen $Q$, $K$ y $V$ en la atención?
 $Q, K \in \mathbb{R}^{n \times d_k}$ y $V \in \mathbb{R}^{n \times d_v}$. Queries y keys deben compartir $d_k$ para poder hacer el producto escalar, mientras que $d_v$ puede ser distinta.
 
-### ¿Cómo se calculan las puntuaciones de atención y qué forma tienen?
-Con el producto escalar de cada query con cada key: $QK^t \in \mathbb{R}^{n \times n}$. El elemento $(i, j)$ mide cuánta atención presta la query $i$ a la key $j$.
-
 ### ¿Por qué se divide por $\sqrt{d_k}$ en la atención?
 Si $q_i$ y $k_j$ son vectores independientes con distribución $\mathcal{N}(0, I)$, su producto escalar tiene media cero y varianza $d_k$. Dividir por $\sqrt{d_k}$ devuelve la varianza a 1 y evita que el softmax reciba valores enormes y se parezca a un one-hot.
 
@@ -112,9 +79,6 @@ $$\mathrm{Attention}(Q, K, V) = \mathrm{Softmax}\!\left(\frac{QK^t}{\sqrt{d_k}}\
 
 ### ¿Sobre qué eje se aplica el softmax en la atención?
 Sobre cada fila de la matriz de puntuaciones, es decir, sobre las keys de cada query. Cada fila de pesos suma 1, mientras que las columnas no suman nada concreto.
-
-### ¿Qué es cada fila de la salida de la atención?
-Una media ponderada de las filas de $V$, con los pesos de atención de esa query como coeficientes. Si una query pone todo el peso en una key, su salida es exactamente el value de esa key.
 
 ### ¿Qué es la autoatención (self-attention)?
 Es el caso en que las queries, las keys y los values salen de la misma secuencia: $\mathrm{SelfAttention}(X) = \mathrm{MultiHead}(X, X, X)$.
@@ -157,21 +121,6 @@ $W_i^Q, W_i^K \in \mathbb{R}^{d_{model} \times d_k}$, $W_i^V \in \mathbb{R}^{d_{
 ### ¿Cómo se eligen $d_k$ y $d_v$ en el Transformer original?
 $d_k = d_v = d_{model}/h$. Con $d_{model} = 512$ y $h = 8$ sale 64. De esta forma la concatenación de las $h$ cabezas tiene $h\, d_v = d_{model}$ columnas.
 
-### ¿Qué hace la proyección de salida $W^O$?
-Mezcla la información de todas las cabezas. Recibe la concatenación ($n \times h d_v$) y devuelve una matriz $n \times d_{model}$, igual que la entrada.
-
-### ¿Cómo se añade un sesgo (bias) a las proyecciones de la atención multicabeza?
-Cada proyección suma un vector fila repetido en las $n$ filas: $Q W_i^Q + \mathbf{1}_n b_i^{Q\,t}$, y lo mismo para $K$ y $V$. En la salida el sesgo se suma después de multiplicar por $W^O$: $\mathrm{Concat}(\mathrm{head}_1, \dots, \mathrm{head}_h)\, W^O + \mathbf{1}_n b^{O\,t}$.
-
-### ¿Cómo se implementan las $h$ cabezas con una sola capa lineal?
-Se aplica una capa `Linear(embed_dim, embed_dim)` y el resultado se reordena con `view(bsz, seq_len, num_heads, head_dim).transpose(1, 2)`. La forma final es `(bsz, h, seq_len, head_dim)`, con una cabeza por índice del segundo eje.
-
-### Si PyTorch imprime el peso de una capa lineal como $A = \begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix}$ y el sesgo como $b = (0, 1)$, ¿cuánto vale la salida para $x = (1, 1)$?
-PyTorch guarda el peso como (salida x entrada) y calcula $x A^t + b$. Aquí $x A^t = (1\cdot 1 + 1\cdot 2,\; 0 + 1\cdot 1) = (3, 1)$ y la salida es $(3, 2)$. Usar $x A$ daría $(1, 4)$, que es incorrecto.
-
-### ¿Cuántas cabezas tiene el modelo de juguete del curso ($d_{model} = 2$)?
-Una sola ($h = 1$), de modo que cada cabeza tiene dimensión $d_k = 2$ (en el código, `head_dim = 2`). Las proyecciones $Q$, $K$, $V$ y de salida son capas lineales de 2 a 2 con sesgo.
-
 ### Problema: dimensiones de cada tensor en la atención multicabeza
 Con $d_{model} = 512$, $h = 8$ y una secuencia de $n = 10$ tokens, calcula la forma de todos los tensores de la autoatención.
 #### Paso 1
@@ -198,19 +147,10 @@ Se concatenan por columnas y, como $W^O = I_4$, ya es la salida:
 
 $$\mathrm{MultiHead} = \begin{pmatrix} 1 & 0{,}5 & 0{,}6698 & 1 \\ 1 & 0{,}6698 & 0{,}5 & 1 \end{pmatrix}$$
 
-### Problema: atención de una cabeza con sesgo
-Con $d_{model} = 2$, $h = 1$ y dos tokens, sea $X = I_2$ y $Q = K = V = X$. Las matrices $W^Q = W^K = W^V = W^O = I_2$. Los sesgos son $b^Q = b^K = (0, 0)$, $b^V = (1, -1)$ y $b^O = (0{,}5, 0{,}5)$. Calcula la salida.
-#### Paso 1
-$V = X + \mathbf{1}_2 b^{V\,t} = \begin{pmatrix} 2 & -1 \\ 1 & 0 \end{pmatrix}$, y $Q$ y $K$ no cambian.
-#### Paso 2
-Puntuaciones $QK^t/\sqrt{2} = I_2/\sqrt{2}$. La fila 1 es $(0{,}7071,\ 0)$ y da pesos $(0{,}6698,\ 0{,}3302)$. Por simetría la fila 2 da $(0{,}3302,\ 0{,}6698)$.
-#### Paso 3
-Cabeza: $\begin{pmatrix} 1{,}6698 & -0{,}6698 \\ 1{,}3302 & -0{,}3302 \end{pmatrix}$. Con $W^O = I_2$ y $b^O$, la salida es $\begin{pmatrix} 2{,}1698 & -0{,}1698 \\ 1{,}8302 & 0{,}1698 \end{pmatrix}$.
-
 ## 7. Residual connections
 
 ### ¿Qué hace una conexión residual (Add)?
-Suma la entrada de una capa a su salida: $\mathrm{Add}(X, \mathrm{Layer}(X)) = X + \mathrm{Layer}(X)$. Se usa para facilitar el entrenamiento de modelos muy profundos.
+Suma la entrada de una capa a su salida: $\mathrm{Add}(X, \mathrm{Layer}(X)) = X + \mathrm{Layer}(X)$. Se usa para facilitar el entrenamiento de modelos muy profundos. (Complemento: el atajo deja pasar el gradiente sin atenuarlo, porque la derivada de $X+\mathrm{Layer}(X)$ respecto a $X$ es $I+\partial\,\mathrm{Layer}/\partial X$, y por eso reduce su desvanecimiento en redes profundas. T03 solo habla de facilitar el entrenamiento.)
 
 ### ¿Qué condición de forma impone una conexión residual?
 La entrada y la salida de la subcapa deben tener la misma forma, porque se suman elemento a elemento. Por eso todas las subcapas del Transformer devuelven $n \times d_{model}$.
@@ -242,23 +182,8 @@ Segunda capa: $(1, 0, 0, 4) W_2 = 1\cdot(1,0) + 4\cdot(2,0) = (9, 0)$. Sumando $
 ### ¿Qué subcapas tiene una capa del codificador?
 Dos: autoatención multicabeza y PWFFN. Cada una va con una conexión residual, un LayerNorm y un dropout.
 
-### ¿Cuál es el orden de operaciones de una capa del codificador con pre-norm?
-Con $X^{(1)} = X$: $X^{(2)} = \mathrm{LayerNorm}(X^{(1)})$, $X^{(3)} = \mathrm{SelfAttention}(X^{(2)})$, dropout, suma con $X^{(1)}$. Después se repite con el LayerNorm, la PWFFN y el dropout, y se suma al resultado de la primera mitad.
-
-### ¿Qué diferencia hay entre pre-norm y post-norm?
-En pre-norm el LayerNorm se aplica primero, a la entrada de cada subcapa. En post-norm, la versión del artículo original, se aplica después de la suma residual. El código de clase usa pre-norm por defecto.
-
 ### ¿Qué hace LayerNorm en el Transformer?
 Normaliza cada vector de la secuencia (cada token) por separado, a lo largo de $d_{model}$. En los ejemplos de clase, con $d_{model} = 2$, cada fila sale como $(-0{,}7071,\; 0{,}7071)$ o su opuesta.
-
-### ¿Cuándo actúa el dropout dentro de una capa del Transformer?
-Sobre la salida de cada subcapa (atención y PWFFN), antes de sumarla a la conexión residual. El artículo usa $P_{drop} = 0{,}1$, y en los ejemplos de clase se pone 0 para que el cálculo sea determinista.
-
-### ¿Por qué LayerNorm de un vector de dos componentes $(a, b)$ con $a \neq b$ da siempre $(-0{,}7071,\ 0{,}7071)$ o su opuesto?
-Con media $(a+b)/2$ y desviación típica con la corrección de Bessel, $|a-b|/\sqrt{2}$, el vector normalizado es $\pm\frac{(a-b)/2}{|a-b|/\sqrt{2}} = \pm\frac{1}{\sqrt{2}} = \pm 0{,}7071$. El signo lo fija cuál de las dos componentes es mayor. (Explicación propia, no está en las transparencias: solo muestran los ejemplos.)
-
-### ¿Qué incluye el codificador completo además de las capas?
-Una pila de $N$ capas idénticas seguida de un LayerNorm final: $\mathrm{Encoder}(X) = \mathrm{LayerNorm}(X^{(N+1)})$. La salida tiene la misma forma que la entrada y se llama memory.
 
 ### Problema: cuenta los parámetros de una capa del codificador
 Con $d_{model} = 4$, $h = 2$ y $d_{ff} = 4\, d_{model} = 16$, y con sesgos en todas las capas lineales, calcula los parámetros de una capa del codificador sin contar LayerNorm.
@@ -286,35 +211,14 @@ Con la fórmula general, la atención da $4(d_{model}^2 + d_{model})$ y la PWFFN
 ### ¿Qué es la atención cruzada (cross-attention)?
 Es la atención en que las queries vienen del decodificador y las keys y values vienen del codificador: $\mathrm{CrossAttention}(X, Y) = \mathrm{MultiHead}(Y, X, X)$, con $X$ la salida del codificador y $Y$ la salida parcial.
 
-### ¿Qué dimensiones tienen los tensores de la atención cruzada si el decodificador tiene $m$ tokens y la entrada $n$?
-Las queries son $m \times d_k$ y las keys $n \times d_k$, de modo que las puntuaciones son $m \times n$. Los values son $n \times d_v$ y la salida es $m \times d_v$ por cabeza, es decir, $m \times d_{model}$ tras la proyección. La salida tiene tantas filas como queries.
-
 ### ¿Qué subcapas tiene una capa del decodificador?
 Tres: autoatención con máscara causal sobre la salida, atención cruzada con la salida del codificador y PWFFN. Cada una va con LayerNorm, dropout y conexión residual.
-
-### ¿Cuál es el orden de operaciones de una capa del decodificador con pre-norm?
-Con $Y^{(1)} = Y$: LayerNorm, autoatención con máscara causal, dropout y suma con $Y^{(1)}$ dan $Y^{(5)}$. Después LayerNorm, atención cruzada con la salida del codificador $X$, dropout y suma con $Y^{(5)}$ dan $Y^{(9)}$. Por último LayerNorm, PWFFN, dropout y suma con $Y^{(9)}$ dan $Y^{(13)}$. El decodificador completo aplica un LayerNorm final tras las $N$ capas: $\mathrm{Decoder}(X,Y,M) = \mathrm{LayerNorm}(Y^{(N+1)})$.
-
-### ¿De dónde salen las queries, las keys y los values en cada atención del decodificador?
-En la autoatención, los tres salen de la salida parcial $Y$. En la atención cruzada, las queries salen de $Y$ y las keys y values de la salida del codificador.
-
-### ¿Para qué sirve la máscara de atención?
-Una matriz $M \in \{0,1\}^{n \times n}$ marca con un 0 las puntuaciones que se ignoran. Esas puntuaciones se sustituyen por $-\infty$ antes del softmax, de modo que reciben peso 0.
 
 ### ¿Cómo se aplica la máscara a las puntuaciones antes del softmax?
 Las puntuaciones de las posiciones prohibidas se sustituyen por $-\infty$, de modo que tras el softmax su peso es 0 y cada fila sigue sumando 1. Multiplicar la puntuación por $M$ es un error, porque un 0 no anula el peso: $e^0 = 1$ sigue aportando. (Aclaración propia, no está en las transparencias.)
 
 ### ¿Qué es la máscara causal y por qué se necesita?
 Es una máscara triangular inferior: el token $i$ solo puede atender a las posiciones $j \le i$. Cancela el peso de los tokens que aún no se han generado, así que el modelo no ve el futuro y mantiene la propiedad autorregresiva.
-
-### ¿Cómo se construye la máscara causal en el código de clase?
-Con `torch.triu(torch.ones(1, size, size), diagonal=1)` se marca la parte superior estricta y se devuelve `mask == 0`. Resulta `True` en la diagonal y por debajo, que son las posiciones permitidas.
-
-### ¿En qué orden se aplica la máscara causal respecto al softmax?
-Antes del softmax, sustituyendo por $-\infty$ las puntuaciones prohibidas. Si se pusiera a cero el peso después del softmax, las filas ya no sumarían 1, y si se multiplicara la puntuación por $M$, un 0 daría $e^0 = 1$ y el peso no se anularía.
-
-### ¿Qué ocurre con la primera fila de la atención con máscara causal?
-El primer token solo puede ver la posición 1, de modo que su fila de pesos es $(1, 0, \dots, 0)$ y su salida es su propio value.
 
 ### Problema: aplica la máscara causal a la atención
 Con los mismos $Q$, $K$ y $V$ del problema de la atención escalada de tres tokens, usa la máscara causal y calcula los pesos y la salida.
@@ -349,17 +253,8 @@ Concatenación $2 \times 4$ y $W^O \in \mathbb{R}^{4 \times 4}$ dan una salida $
 
 ## 13. Transformer
 
-### ¿Cómo se compone el Transformer completo?
-$\mathrm{Transformer}(X, Y, M) = \mathrm{Decoder}(\mathrm{Encoder}(X), Y, M)$. El método `encode` convierte la entrada en el memory y `decode` produce los vectores de salida a partir del memory y de la salida parcial.
-
-### ¿Qué parámetros fija `create_model` en el código del curso (Annotated Transformer)?
-`src_vocab_size` y `tgt_vocab_size` (tamaños de vocabulario), `embed_dim` ($d_{model}$), `num_layers` ($N$), `num_heads` ($h$), `dropout`, `pre_norm` y `pe_type`. Con `embed_dim = 512`, `num_layers = 6`, `num_heads = 8` y `dropout = 0.1` se obtienen las dimensiones del artículo, pero el artículo aplica el LayerNorm después de la suma, así que también hace falta `pre_norm = False`.
-
 ### ¿Qué es el atado de pesos (weight tying) en el Transformer?
 La matriz de la proyección final del generador se comparte con la matriz de embedding de la salida (y, si los vocabularios coinciden, también con la de la entrada). Reduce los parámetros y exige que el generador no tenga sesgo.
-
-### ¿Cómo se inicializan los pesos del modelo en el código de clase?
-Los parámetros con más de una dimensión (`p.dim() > 1`) se inicializan con Xavier uniforme (`xavier_uniform_`). Los de una sola dimensión, como los sesgos, no pasan por ese paso.
 
 ### Problema: cuenta los parámetros del modelo de juguete
 El modelo de clase tiene `src_vocab_size = 3`, `tgt_vocab_size = 3`, $d_{model} = 2$, $N = 1$ capa, $h = 1$ y $d_{ff} = 8$. El generador comparte los pesos con el embedding de salida. Cuenta los parámetros sin LayerNorm.
@@ -374,19 +269,8 @@ Suma: $12 + 66 + 90 = 168$ parámetros, sin contar los LayerNorm.
 
 ## 14. Training
 
-### ¿Qué es la tarea «copy» y para qué se usa?
-El modelo debe aprender a copiar una secuencia aleatoria de símbolos. Es una tarea de juguete para comprobar que el Transformer entrena y que la implementación funciona.
-
-### En el entrenamiento del Transformer con la tarea copy, ¿qué son `tgt` y `tgt_y`?
-`tgt` es la entrada del decodificador y `tgt_y` es el objetivo, desplazado una posición: en la posición $t$, el decodificador recibe los tokens hasta $t$ y debe predecir el token $t+1$.
-
 ### ¿Por qué se entrena en paralelo todas las posiciones del decodificador?
 Porque se le da al decodificador la salida correcta completa (teacher forcing) y la máscara causal impide que cada posición vea las siguientes. Una sola pasada calcula así las predicciones de todos los tokens.
-
-### ¿Qué pérdida se usa para entrenar el Transformer?
-Entropía cruzada entre la predicción $\hat{y}$ y el objetivo $\tilde{y}$:
-
-$$H(\hat{y}, \tilde{y}) = -\sum_c \tilde{y}_c \log \hat{y}_c$$
 
 ### ¿En qué consiste el suavizado de etiquetas (label smoothing)?
 Sustituye el objetivo one-hot $y$ por $\tilde{y} = (1-\epsilon)\, y + \epsilon \frac{1}{C} \mathbf{1}_C$, con $C$ clases. En el código de clase $\epsilon = 0{,}1$.
@@ -413,9 +297,6 @@ AdamW, que es Adam con decaimiento de pesos desacoplado. El artículo usó Adam 
 ### ¿Cuáles son los pasos de una iteración de AdamW?
 Con gradiente $g_i = \nabla_\theta f_i(\theta_{i-1})$: actualiza $m_i = \beta_1 m_{i-1} + (1-\beta_1) g_i$ y $v_i = \beta_2 v_{i-1} + (1-\beta_2) g_i^2$. Corrige el sesgo con $\hat{m}_i = m_i/(1-\beta_1^i)$ y $\hat{v}_i = v_i/(1-\beta_2^i)$. Aplica el decaimiento $\theta \leftarrow \theta - \gamma\lambda\theta$ y, por último, $\theta_i = \theta - \gamma\, \hat{m}_i/(\sqrt{\hat{v}_i} + \epsilon)$.
 
-### ¿Por qué Adam corrige el sesgo de los momentos?
-Porque $m$ y $v$ empiezan en cero y en las primeras iteraciones quedan por debajo de su valor real. Dividir por $1-\beta^i$ corrige esa infraestimación.
-
 ### Problema: ejecuta la primera iteración de AdamW
 Con $\theta_0 = (1, 1)$, gradiente $g_1 = (0{,}5, -2)$, $\gamma = 0{,}1$, $\lambda = 0{,}01$, $\beta_1 = 0{,}9$, $\beta_2 = 0{,}98$ y $\epsilon = 10^{-9}$, calcula $\theta_1$.
 #### Paso 1
@@ -432,29 +313,7 @@ Crece linealmente durante `warmup_steps` y luego decrece de forma proporcional a
 
 $$lrate = d_{model}^{-0{,}5} \min\!\left(step^{-0{,}5},\; step\cdot warmup^{-1{,}5}\right)$$
 
-### ¿Qué inconveniente tiene el planificador original?
-Depende del tamaño del modelo mediante $d_{model}^{-0{,}5}$, lo que dificulta comparar modelos de distinto tamaño.
-
-### ¿Qué planificador se usa actualmente?
-Cosine annealing con warmup: la tasa crece linealmente desde cero hasta un valor inicial prefijado y después decrece hasta cero siguiendo una función coseno.
-
-### Problema: tasa de aprendizaje del planificador original en el pico
-Con $d_{model} = 512$ y $warmup = 4000$ pasos, calcula $lrate$ en el paso 4000.
-#### Paso 1
-En $step = warmup$ los dos términos del mínimo coinciden, pues $warmup^{-0{,}5} = warmup \cdot warmup^{-1{,}5}$.
-#### Paso 2
-$lrate = 512^{-0{,}5} \cdot 4000^{-0{,}5} = 0{,}04419 \cdot 0{,}015811 = 6{,}99\cdot 10^{-4}$. Es el máximo, porque antes crece y después decrece.
-
 ## 15. Activation functions in PWFFN
-
-### ¿Qué es ReLU?
-$\max(a, 0)$. Es la activación original de la PWFFN.
-
-### ¿Qué es GELU?
-$\mathrm{GELU}(a) = a \cdot P(a)$, con $P$ la función de distribución de una $\mathcal{N}(0,1)$. Se usa en BERT (2019) y se aproxima con una expresión basada en $\tanh$.
-
-### ¿Cuál es la aproximación de GELU con tanh?
-$\mathrm{GELU}(a) \approx 0{,}5\,a\left(1 + \tanh\!\left(\sqrt{2/\pi}\,(a + 0{,}044715\,a^3)\right)\right)$.
 
 ### ¿Qué es SiLU?
 $\mathrm{SiLU}(a) = a\,\sigma(a)$, con $\sigma$ la sigmoide. Se conoce también como Swish (2017).
@@ -464,9 +323,6 @@ $\mathrm{GLU}(a, b) = a\,\sigma(b)$, con $b = a w_g + b_g$. Con $w_g = 1$ y $b_g
 
 ### ¿Qué es SwiGLU?
 Una variante de GLU en que la puerta usa SiLU en lugar de la sigmoide: $\mathrm{SwiGLU}(a, b) = a \cdot \mathrm{SiLU}(b)$, con $b = a w_g + b_g$.
-
-### ¿Cuál es la fórmula de la PWFFN con SwiGLU?
-$\mathrm{PWFFN}(X) = \mathrm{SwiGLU}(XW_1 + \mathbf{1}_n b_1^t,\; XW_2 + \mathbf{1}_n b_2^t)\, W_3 + \mathbf{1}_n b_3^t$. Igual que con GLU, necesita tres matrices en vez de dos.
 
 ### Problema: calcula GLU y SwiGLU en un punto
 Con $a = 2$ y $b = 2$ (puerta ya calculada), calcula $\mathrm{GLU}(a, b)$ y $\mathrm{SwiGLU}(a, b)$.
@@ -494,25 +350,13 @@ Multicabeza ($g = 8$): $8 \cdot 65\,536 = 524\,288$. Multiconsulta ($g = 1$): $6
 #### Paso 3
 Las proyecciones de $Q$ ($8 \cdot 32\,768$) y $W^O$ no cambian en ninguno de los tres casos.
 
-### ¿Qué es la atención con puertas (gated attention)?
-Se modula una entrada con una puerta calculada a partir de otra: $X' = X \odot \sigma(Y W_G)$, con $\odot$ el producto elemento a elemento. En la atención multicabeza, se multiplica la concatenación de cabezas por $\sigma(Q W_G)$ antes de $W^O$, con $W_G \in \mathbb{R}^{d_{model} \times h d_v}$.
-
 ## 17. Mixture of experts (MoE)
 
 ### ¿Qué es una mezcla de expertos (MoE)?
 Un conjunto de $n$ expertos (redes neuronales) $E_k$ y una red de puerta $G$ cuya salida es un vector disperso de dimensión $n$. La salida es $\mathrm{MoE}(x) = \sum_{k=1}^{n} G(x)_k\, E_k(x)$.
 
-### ¿Cómo se usa una MoE dentro de un Transformer?
-La PWFFN de cada capa se sustituye por una mezcla de expertos, en la que cada experto es una PWFFN.
-
 ### ¿Qué diferencia hay entre la puerta densa y la puerta dispersa?
 La densa es $G(x) = \mathrm{Softmax}(xW_G)$, que reparte peso entre todos los expertos. La dispersa con ruido es $G(x) = \mathrm{Softmax}(\mathrm{TopK}(xW_G + \epsilon))$ con $\epsilon \sim \mathcal{N}(0, \mathrm{Softplus}(xW_\epsilon))$, y solo $k$ expertos reciben peso distinto de cero.
-
-### ¿Para qué sirve el ruido en la puerta dispersa?
-Contribuye a repartir las muestras de forma equilibrada entre los expertos.
-
-### ¿Qué es Softplus?
-$\mathrm{Softplus}(x) = \log(1 + e^x)$ (con $\beta = 1$), una aproximación suave de la función ReLU.
 
 ### Problema: calcula la salida de una MoE con puerta dispersa
 Una MoE tiene 4 expertos. Para cierto $x$, $xW_G = (2, 1, 0, -1)$ (se ignora el ruido) y los expertos dan los escalares $E(x) = (10, 20, 30, 40)$. Calcula la salida con $k = 2$.
@@ -525,9 +369,6 @@ $\mathrm{MoE}(x) = 0{,}7311\cdot 10 + 0{,}2689\cdot 20 = 12{,}689$. Solo se eval
 
 ## 18. Rotatory Positional Encoding
 
-### ¿En qué se diferencia la codificación posicional rotatoria (RoPE) de la clásica?
-La clásica suma un vector de posición al embedding. RoPE no suma nada: rota por pares las componentes del vector $X$ con un ángulo que depende de la posición.
-
 ### ¿Cuál es la fórmula de RoPE?
 Para cada par de componentes $(2i, 2i+1)$ de la fila en la posición $pos$:
 
@@ -535,9 +376,6 @@ $$\mathrm{RoPE}\begin{pmatrix} X_{pos,2i} \\ X_{pos,2i+1} \end{pmatrix} = \begin
 
 ### ¿Qué ventaja tiene RoPE sobre la codificación posicional absoluta?
 La puntuación de atención depende directamente de la posición relativa entre query y key. Sea $q$ la query sin rotar y $R(pos)$ la matriz de rotaciones por bloques. La puntuación entre la query en la posición $pos$ y la key en $pos + j$ es $(R(pos)\,q)^t R(pos+j)\,k = q^t R(-pos) R(pos+j) k = q^t R(j) k$, que solo depende de $j$.
-
-### ¿Qué le ocurre a un vector en la posición 0 con RoPE?
-No cambia, porque el ángulo es 0 para todos los pares y la rotación es la identidad.
 
 ### Problema: aplica RoPE a un vector en varias posiciones
 Con $d_{model} = 4$ y el mismo vector $x = (1, 0, 1, 0)$ en las posiciones 0, 1 y 2, calcula $\mathrm{RoPE}(x)$ en cada una.
@@ -549,12 +387,3 @@ Con la fórmula de fila por matriz, el par $(a, b)$ pasa a $(a\cos\theta + b\sin
 Posición 0: los ángulos son 0 y 0, así que $x$ queda $(1, 0, 1, 0)$. Posición 1: $\theta = 1$ y $0{,}01$, que dan $(0{,}5403,\; -0{,}8415,\; 1{,}0000,\; -0{,}0100)$.
 #### Paso 4
 Posición 2: $\theta = 2$ y $0{,}02$, que dan $(-0{,}4161,\; -0{,}9093,\; 0{,}9998,\; -0{,}0200)$. Los pares de frecuencia baja giran poco entre posiciones vecinas.
-
-### Problema: comprueba que RoPE depende solo de la posición relativa
-Con un solo par ($d_{model} = 2$) y $\theta_{pos} = pos$, toma $q = k = (1, 0)$. Calcula la puntuación entre un query en la posición 1 y una key en la 3, y entre un query en la 5 y una key en la 7.
-#### Paso 1
-Con la fórmula de fila por matriz, el vector $(1, 0)$ en la posición $p$ queda $(\cos p,\; -\sin p)$.
-#### Paso 2
-La puntuación entre las posiciones $p$ y $p+j$ es $\cos p\cos(p+j) + \sin p \sin(p+j) = \cos j$.
-#### Paso 3
-Ambos casos tienen $j = 2$. Con números: $\cos 1 \cos 3 + \sin 1 \sin 3 = 0{,}5403\cdot(-0{,}9900) + 0{,}8415\cdot 0{,}1411 = -0{,}4161$ y $\cos 5 \cos 7 + \sin 5 \sin 7 = 0{,}2837\cdot 0{,}7539 + (-0{,}9589)\cdot 0{,}6570 = -0{,}4161$, que es $\cos 2$. La puntuación no depende de $p$.

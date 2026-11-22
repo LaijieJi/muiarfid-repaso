@@ -43,7 +43,7 @@
 [data-sigla="TMH"], [data-sigla="ALC"] { --linea: #8a5a2b; }
 [data-sigla="RES"] { --linea: #5d646e; }
 
-* { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 
 html { -webkit-text-size-adjust: 100%; scrollbar-color: var(--filete) transparent; }

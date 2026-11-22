@@ -24,14 +24,6 @@ Porque el número de caminos crece exponencialmente con la longitud de la cadena
 
 ## 3.1 Modelos generativos lineales: PFSA
 
-### ¿Cómo se calcula la probabilidad de un camino $\pi$ que genera la cadena $x$ en un PFSA?
-Se multiplica la probabilidad inicial del primer estado, la probabilidad de cada arco recorrido y la probabilidad final del último estado:
-
-$$P_A(x, \pi) = I(s_0) \prod_{i=1}^{k} P(s_{i-1}, x_i, s_i)\; F(s_k)$$
-
-### ¿En qué se diferencian $P_A(x)$ y $\hat P_A(x)$ en un PFSA?
-$P_A(x)$ suma $P_A(x,\pi)$ sobre todos los caminos que generan $x$. $\hat P_A(x)$ toma solo el máximo de esos caminos. Por tanto $\hat P_A(x) \le P_A(x)$, y la igualdad se da solo si un único camino tiene probabilidad no nula.
-
 ### ¿Qué significa $\gamma_x(t, q)$ en el algoritmo de Viterbi para un PFSA?
 Es la probabilidad del mejor camino que genera el prefijo $x_1 \dots x_t$ y termina en el estado $q$. Se define para cada estado y cada instante de 0 a $|x|$.
 
@@ -89,9 +81,6 @@ Se obtiene $P_A(x)$ para cualquier instante $t$, porque todo camino pasa por exa
 $$P(s_t = q \mid x) = \frac{\alpha_x(t,q)\,\beta_x(t,q)}{P_A(x)}$$
 
 Es la probabilidad a posteriori del estado. No coincide en general con la que da el camino de Viterbi, que es un único camino.
-
-### ¿Qué coste tiene Viterbi (o Forward) frente a enumerar caminos?
-Es proporcional a $|x| \cdot |Q|^2$ operaciones, porque en cada instante se rellena una celda por estado combinando todos los estados anteriores. Enumerar caminos cuesta del orden de $|Q|^{|x|}$.
 
 ### Problema: Viterbi en un PFSA de 3 estados con la cadena aba
 Sea un PFSA con estados $q_0, q_1, q_2$, alfabeto $\{a, b\}$, $I(q_0)=1$ y los demás estados con $I=0$. Los arcos y las probabilidades finales son:
@@ -199,22 +188,11 @@ Posteriores del estado en el instante 2, dividiendo cada término anterior entre
 
 ## 3.2 Modelos discriminativos lineales: CRF
 
-### ¿Cómo se define la probabilidad de una secuencia de etiquetas $y$ en un CRF lineal?
-$$p(y \mid x; \theta) = \frac{\exp\left\{ \sum_{t=1}^{T} \sum_{k=1}^{K} \theta_k f_k(y_{t-1}, y_t, x_t) \right\}}{Z(x;\theta)}$$
-
-Es el exponente de una suma ponderada de características a lo largo de la secuencia, normalizado por $Z$.
-
 ### ¿Qué es $Z(x;\theta)$ en un CRF y por qué es costosa de calcular directamente?
 Es la suma de la puntuación exponenciada de todas las secuencias de etiquetas posibles para $x$. Tiene $|\mathcal{Y}|^T$ términos, así que enumerarla es exponencial en la longitud.
 
 ### ¿Qué es un factor $\Psi_t$ en un CRF visto como grafo de factores?
 $\Psi_t(y_{t-1}, y_t, x_t) = \exp\{\sum_k \theta_k f_k(y_{t-1}, y_t, x_t)\}$. Con él el CRF queda como $p(y \mid x) = \frac{1}{Z} \prod_t \Psi_t(y_{t-1}, y_t, x_t)$, un producto de factores locales.
-
-### ¿Qué papel juega $\Psi_t$ respecto a $P(q', x_t, q)$ del PFSA?
-Ocupa el mismo lugar en las recursiones. La diferencia es que $\Psi_t$ no es una probabilidad: no está normalizada localmente, de modo que la normalización global se hace con $Z$.
-
-### ¿Hace falta calcular $Z(x;\theta)$ para decodificar con un CRF?
-No. $Z$ no depende de $y$, así que $\arg\max_y p(y \mid x) = \arg\max_y \prod_t \Psi_t$. Solo se necesita $Z$ cuando se quiere la probabilidad de una secuencia concreta o para entrenar.
 
 ### ¿Cómo se define y se inicializa el Viterbi de un CRF?
 $\gamma_t(s)$ es la mayor puntuación de una secuencia de etiquetas que termina en $s$ en el instante $t$. Se inicializa con $\gamma_1(s) = \Psi_1(y_0 = \text{null}, y_1 = s, x_1)$, donde la etiqueta anterior es una marca especial de inicio.
@@ -226,9 +204,6 @@ El resultado es $\max_s \gamma_T(s)$, que es la puntuación (no normalizada) de 
 
 ### ¿Cuál es la recursión de Forward en un CRF y qué se obtiene al final?
 $\alpha_t(s) = \sum_{s'} \alpha_{t-1}(s') \cdot \Psi_t(s', s, x_t)$, con $\alpha_1(s) = \Psi_1(\text{null}, s, x_1)$. Al final, $\sum_s \alpha_T(s) = Z(x;\theta)$.
-
-### ¿Es $\sum_s \alpha_T(s)$ una probabilidad en un CRF?
-No, es la constante de normalización $Z(x;\theta)$, que puede ser mucho mayor que 1. Para obtener la probabilidad de una secuencia se divide su puntuación entre $Z$.
 
 ### Problema: Viterbi y Forward en un CRF con dos etiquetas
 Un CRF tiene etiquetas $\{A, B\}$ y una entrada de longitud $T=3$. Los factores ya evaluados son: $\Psi_1(A)=2$ y $\Psi_1(B)=1$ (la etiqueta anterior es la marca de inicio), y para $t=2$ y $t=3$ las tablas $\Psi_t(y_{t-1}, y_t)$:
@@ -261,12 +236,6 @@ $Z = 24 + 26 = 50$ y la mejor puntuación es $\max(12, 18) = 18$, terminando en 
 Su probabilidad es $18/50 = 0{,}36$. Comprobación enumerando las 8 secuencias: AAA 4, AAB 2, ABA 12, ABB 18, BAA 6, BAB 3, BBA 2, BBB 3, que suman 50.
 
 ## 3.3 Modelos generativos no lineales: PCFG
-
-### ¿Cómo se calcula la probabilidad conjunta $P_\theta(x, t_x)$ en una PCFG?
-Es el producto de las probabilidades de todas las reglas $r_1, \dots, r_m$ que usa el árbol de derivación $t_x$ para generar $x$.
-
-### ¿En qué se diferencian $P_\theta(x)$ y $\hat P_\theta(x)$ en una PCFG?
-$P_\theta(x)$ suma la probabilidad de todos los árboles que generan $x$. $\hat P_\theta(x)$ es la probabilidad del árbol más probable. Una gramática ambigua da $P_\theta(x) > \hat P_\theta(x)$.
 
 ### ¿Qué significa $\hat e(A, i, i+l)$ en el Viterbi de una PCFG?
 Es la probabilidad del mejor árbol que, partiendo del no terminal $A$, genera las palabras $x_{i+1} \dots x_{i+l}$. El par $(i, i+l)$ marca el segmento por sus bordes, así que contiene $l$ palabras.
@@ -342,43 +311,22 @@ Son cúbicos en la longitud $T$ de la cadena, como CKY: tres bucles anidados sob
 
 ## 3.4 Grafos de palabras y búsqueda N-best
 
-### ¿Por qué se usan grafos de palabras en lugar de decodificar directamente sobre el trellis?
-Porque la búsqueda sobre el trellis completo es muy cara en tiempo y espacio, incluso con podas. El grafo de palabras reduce el espacio de búsqueda a las hipótesis más probables.
-
 ### ¿Qué es un grafo de palabras?
 Un grafo acíclico dirigido con etiquetas y pesos. Representa de forma compacta un conjunto grande y finito de secuencias de palabras, y en concreto las interpretaciones con mayor probabilidad a posteriori.
 
 ### ¿Qué relación hay entre un grafo de palabras y el trellis de Viterbi?
 El grafo de palabras es una versión podada del trellis de búsqueda de Viterbi que se obtiene durante el reconocimiento. Los nodos son pares (instante, estado) que sobreviven y los pesos de los arcos son los de las transiciones del autómata.
 
-### ¿Por qué el grafo obtenido tras la búsqueda no es probabilístico ni consistente?
-Porque la poda elimina caminos, así que los pesos de los arcos que salen de un nodo ya no suman 1 y la suma de los caminos que quedan no es 1. Para operaciones que lo necesitan hay que normalizarlo.
-
 ### ¿Cuál es el peso normalizado $\psi(q', q)$ de un arco de un grafo de palabras?
 $$\psi(q', q) = \frac{P(q', q) \cdot \beta(q)}{\beta(q')}$$
 
 Se multiplica el peso original por la probabilidad de completar desde el nodo destino y se divide entre la probabilidad de completar desde el nodo origen.
 
-### ¿Qué papel tiene la función backward $\beta$ al normalizar un grafo de palabras?
-Mide cuánta probabilidad hay desde un nodo hasta el final. Es la suma de las probabilidades de todos los caminos que salen de él, y se calcula hacia atrás empezando por $\beta = F$ en el nodo final.
-
 ### ¿Qué propiedad garantiza que los pesos normalizados de los arcos de un nodo sumen 1?
 La propiedad de buena formación. Para todo nodo $q'$ que no es final, $\sum_q \psi(q', q) = 1$, porque $\beta(q')$ es justamente la suma de $P(q', q)\,\beta(q)$ sobre los arcos que salen de $q'$.
 
-### ¿Qué propiedad garantiza que el grafo normalizado es consistente?
-La suma de las probabilidades de todos los caminos del grafo vale 1. Se cumple porque, tras normalizar, cada nodo reparte probabilidad 1 entre sus arcos de salida.
-
-### ¿Cambia la normalización el reparto de probabilidad entre las frases del grafo?
-No, conserva la distribución relativa. Cada camino se multiplica por el mismo factor, $1/\beta(\text{inicio})$, así que el orden entre frases no cambia.
-
 ### ¿Qué convierte la normalización de un grafo de palabras en términos de probabilidad conjunta y posterior?
 Convierte la conjunta $P(x, \pi)$ de cada camino en la posterior $P(\pi \mid x)$, porque divide entre $\beta(\text{inicio}) = P(x)$. El camino de mayor peso antes y después de normalizar es el mismo.
-
-### En reconocimiento de texto manuscrito, ¿qué se maximiza y con qué se busca?
-Se busca $\arg\max_w P(w)\,P(x \mid w)$, el modelo de lenguaje por la verosimilitud de la imagen dada la transcripción. El motor de búsqueda es Viterbi, a menudo con poda por haz.
-
-### ¿Cómo se integran los modelos morfológico, léxico y sintáctico en un único PFSA para reconocimiento de texto?
-Cada nivel se modela con un PFSA y se componen en una sola red enorme. Los modelos de carácter, el diccionario de pronunciación y el modelo de lenguaje se combinan como transductores y la red resultante se determiniza y minimiza.
 
 ### En la búsqueda N-best sobre un grafo de palabras, ¿qué es $\Phi[q]$ y cómo se calcula?
 Es la probabilidad del mejor camino desde el nodo $q$ hasta un nodo final, incluido el peso final: $\Phi[q] = \max_{\pi \in P(q,f)} P(\pi)\,\rho(f)$. Se calcula hacia atrás, tomando en cada nodo el máximo de peso del arco por $\Phi$ del destino.
@@ -391,15 +339,6 @@ Porque $p \cdot \Phi[q]$ es la probabilidad del mejor camino completo que se pue
 
 ### ¿Para qué sirve el contador $r[q]$ en el algoritmo N-best?
 Cuenta cuántos pares con primer elemento $q$ se han extraído de la cola. Mientras $r[q] \le N$ se expande el par, y cuando $r[q] > N$ ya no puede pertenecer a ninguno de los $N$ mejores caminos y se descarta sin expandir.
-
-### ¿Cuándo termina el algoritmo N-best?
-Cuando se extrae por $N$-ésima vez un nodo final, es decir, cuando $r[f] = N$ para un nodo final $f$. En ese momento ya se han extraído los $N$ mejores caminos completos.
-
-### ¿Cómo se recupera una de las $N$ mejores cadenas en el algoritmo N-best?
-Con el predecesor $\pi[(q,p)]$ de cada par. Desde el par final extraído se sigue la cadena de predecesores hasta $(\text{inicio}, 1)$ y se lee el camino al revés.
-
-### ¿Por qué un mismo nodo puede extraerse de la cola varias veces con probabilidades distintas?
-Porque a un nodo se llega por varios caminos parciales, cada uno con su propia probabilidad acumulada $p$. Cada uno es un par $(q, p)$ distinto en la cola. Por eso hace falta el contador $r[q]$ y no una marca de visitado.
 
 ### ¿Qué relación hay entre el primer resultado de N-best y Viterbi?
 El primer camino extraído es el de mayor probabilidad, es decir, la solución de Viterbi. Los siguientes son el segundo, tercero y sucesivos mejores caminos.

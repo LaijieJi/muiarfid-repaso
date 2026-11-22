@@ -2,9 +2,6 @@
 
 ## 1. Motivación
 
-### ¿Qué defecto de la búsqueda en el espacio de estados corrige la planificación en el espacio de planes?
-En el espacio de estados se pueden probar muchas ordenaciones distintas de las mismas acciones antes de descubrir que no hay solución. Cada ordenación es una rama aparte aunque las acciones sean las mismas. La planificación en el espacio de planes evita decidir el orden hasta que hace falta.
-
 ### ¿Qué es una estrategia de mínimo compromiso en planificación?
 No fijar ordenaciones ni instanciaciones de variables hasta que sean necesarias. Un plan parcial deja abiertas todas las decisiones que todavía no hacen falta.
 
@@ -25,23 +22,11 @@ Los enlaces causales, las restricciones de precedencia y las restricciones de li
 ### ¿Qué significa el enlace causal $\langle a, p, b \rangle$?
 El paso $a$ se usa para establecer la precondición $p$ del paso $b$. Implica que $a$ añade $p$, que $a$ va antes que $b$ y que nadie debe borrar $p$ entre ambos.
 
-### ¿Qué hace una restricción de precedencia $a < b$?
-Obliga a que el paso $a$ se ejecute antes que el paso $b$. No dice que sean consecutivos, solo que $a$ va antes en cualquier orden total del plan.
-
-### ¿Qué clases de restricciones de ligadura hay?
-De desigualdad ($v_1 \neq v_2$ o $v \neq c$) y de igualdad o sustitución ($v_1 = v_2$ o $v = c$). Fijan cómo se instancian las variables de los operadores.
-
-### ¿Qué es refinar un plan parcial?
-Escoger un fallo del plan y ramificar por todas las formas de resolverlo. Cada forma de resolverlo da un plan parcial nuevo más completo.
-
 ### ¿Qué tres tipos de fallo puede tener un plan parcial?
 Un subobjetivo pendiente (open goal) sin resolver, una variable sin instanciar (fallo de ligadura) y una amenaza sobre un enlace causal. Cuando no queda ninguno, el plan es una solución.
 
 ### ¿Cuándo es solución un plan parcial?
 Cuando no tiene ningún fallo: ningún subobjetivo pendiente, ninguna amenaza y ninguna variable por instanciar. Entonces cualquier orden total compatible con las restricciones consigue la meta.
-
-### ¿Cuándo está completo un plan parcial y cuándo está lograda una precondición?
-Un plan está completo si todas sus precondiciones están logradas. Una precondición está lograda si es efecto de un paso anterior y ningún paso que pueda quedar entre medias la deshace.
 
 ### ¿Qué es un subobjetivo pendiente?
 Una precondición $p$ de un paso $a$ para la cual todavía no se ha decidido qué paso la establece. Las precondiciones de Finish y de cada paso nuevo entran en la agenda como subobjetivos pendientes.
@@ -68,9 +53,6 @@ No. Solo amenaza quien borra $p$. Un paso que vuelve a añadir $p$ no estropea e
 ### ¿Qué tres maneras hay de resolver una amenaza de $c$ sobre $\langle a, p, b \rangle$?
 Promoción ($c < a$), democión ($b < c$) y separación (restringir variables para que $c$ no borre $p$). La separación solo existe si el paso tiene variables.
 
-### ¿Qué ordenación impone la promoción y cuál la democión?
-La promoción pone la amenaza antes del productor: $c < a$. La democión la pone después del consumidor: $b < c$.
-
 ### ¿Por qué no se puede resolver por promoción una amenaza sobre un enlace que sale de Start?
 Porque la promoción exige $c < \text{Start}$ y Start va antes que todos los demás pasos. Solo queda la democión. De forma simétrica, si el consumidor es Finish no cabe la democión, porque nada puede ir después de Finish.
 
@@ -79,12 +61,6 @@ Ese plan parcial es un callejón sin salida. El planificador lo descarta y vuelv
 
 ### ¿Cómo se resuelve por separación la amenaza de `clobber(y)`, que borra $pq(y)$, sobre el enlace $\langle foo(x), pq(x), baz(x) \rangle$?
 Con la restricción de desigualdad $x \neq y$. Así `clobber(y)` no borra $pq(x)$ y la amenaza desaparece sin imponer ningún orden.
-
-### ¿Por qué hay que volver a buscar amenazas cada vez que se añade un paso o un enlace?
-Porque un paso nuevo puede borrar condiciones de enlaces que ya existían, y un enlace nuevo puede estar amenazado por pasos que ya estaban. Una amenaza resuelta en el nodo anterior no garantiza que el nuevo plan esté libre de ellas.
-
-### ¿Cuántos órdenes totales válidos tiene un plan con los pasos $A$, $B$, $C$ si solo se exige $A < C$ y $B < C$?
-Dos: $A\,B\,C$ y $B\,A\,C$. Un plan parcial representa a la vez todas sus linearizaciones, y cualquiera de ellas ejecuta la meta.
 
 ### Problema: reconoce los fallos de un plan parcial del robot de una mano
 Dominio del robot con una mano y dos piezas $P$ y $Q$. Las acciones son:
@@ -150,20 +126,11 @@ Plan C. HacerTé borra agua y puede caer entre Start y HacerCafé. Simétricamen
 
 ## 3. Árbol POP (búsqueda en el espacio de planes)
 
-### ¿Qué es un nodo del árbol de búsqueda POP?
-Un plan parcial, es decir, un conjunto de acciones parcialmente instanciadas más sus restricciones. La raíz es el plan inicial, con solo Start y Finish.
-
-### ¿En qué dirección busca un planificador POP?
-Hacia atrás desde la meta. Parte de las precondiciones de Finish y va añadiendo pasos que las producen. Cada refinamiento acerca el plan a uno sin fallos.
-
 ### ¿Por qué el espacio de búsqueda de POP es un árbol Y/O?
 Los fallos de un plan forman las ramas Y: hay que resolverlos todos. Los resolutores de un fallo concreto son las ramas O: basta con que uno lleve a una solución. Cada resolutor genera un plan parcial distinto.
 
 ### ¿Qué decisión es un punto de retroceso en POP, elegir el fallo o elegir el resolutor?
 Elegir el resolutor, porque hay que probar los distintos y volver atrás si falla. El fallo se elige sin retroceso, ya que todos acabarán resueltos en cualquier solución.
-
-### ¿Qué significa serializar el árbol Y/O?
-Convertirlo en un árbol de espacio de planes decidiendo qué fallo se expande ahora. En cada rama Y se elige un hijo que se expande primero y se retrasa el resto.
 
 ### ¿Por qué da lo mismo, para la corrección, el fallo que se elige primero?
 Porque todos los fallos se deben resolver. Cambia el tamaño del árbol serializado, no el conjunto de soluciones. Por eso la elección del fallo es solo una cuestión de eficiencia.
@@ -173,17 +140,8 @@ Porque todos los fallos se deben resolver. Cambia el tamaño del árbol serializ
 ### ¿Cuál es la idea del procedimiento PSP (Plan-Space Planning)?
 Mientras el plan tenga fallos, elige uno, calcula sus resolutores, escoge uno de forma no determinista y refina el plan con él. Si el plan no tiene fallos, lo devuelve. Si un fallo no tiene resolutores, devuelve fallo y se retrocede.
 
-### ¿Qué dos conjuntos de fallos se calculan en cada llamada a PSP?
-Los subobjetivos pendientes (open goals) y las amenazas. Se unen en una sola agenda de la que se elige el fallo a resolver. El pseudocódigo de las transparencias solo calcula estos dos conjuntos, aunque en otra transparencia también se cuenta como fallo una variable sin instanciar.
-
-### ¿Qué garantías da PSP?
-Es correcto y completo. Devuelve un plan de orden parcial, de modo que cualquier orden total suyo consigue la meta y las acciones sin orden se pueden ejecutar en paralelo si el entorno lo permite.
-
 ### ¿Cuál es el plan inicial de PSP?
 Un plan con solo los pasos Start y Finish, con Start < Finish y sin enlaces causales. Su agenda contiene un subobjetivo pendiente por cada precondición de Finish.
-
-### ¿Cuántos resolutores hay para una amenaza sobre un enlace con productor y consumidor ordinarios?
-Hasta tres: promoción, democión y separación (esta última si hay variables). Cada uno que no contradiga el orden actual da un plan nuevo.
 
 ### Problema: ejecuta a mano PSP en el dominio café y té
 Dominio: HacerCafé (precondición agua, efectos café y no agua), HacerTé (precondición agua, efectos té y no agua) y Llenar (sin precondición, efecto agua). Estado inicial: agua. Meta: café y té.
@@ -218,40 +176,16 @@ Comprobación sobre los estados: Start da agua. HacerCafé gasta el agua y da ca
 
 ## 5. Ejemplo de transporte
 
-### ¿Cuál es el problema de transporte que sirve de ejemplo de planificación en el espacio de planes?
-Un camión t1 y un paquete p1. Estado inicial: (at p1 cA) y (at t1 cA). Meta: (at p1 cB). Operadores: `unload p1 ?tr cB` (precondiciones (at ?tr cB) e (in p1 ?tr), efectos (at p1 cB) y no (in p1 ?tr)), `load p1 t1 ?city` (precondiciones (at t1 ?city) y (at p1 ?city), efectos (in p1 t1) y no (at p1 ?city)) y `move t1 ?c cB` (precondición (at t1 ?c), efectos (at t1 cB) y no (at t1 ?c)).
-
 ### En el ejemplo de transporte, ¿por qué al añadir `unload p1 ?tr cB` aparece una variable pendiente?
 Porque el camión es una variable del operador sin instanciar. El plan tiene un fallo de ligadura: hay que fijar `?tr`. Como en el ejemplo solo hay un camión, `t1`, el fallo se resuelve con `?tr = t1`.
-
-### ¿Qué dos subobjetivos pendientes aparecen al instanciar `unload p1 t1 cB`?
-(at t1 cB) e (in p1 t1), que son sus precondiciones. El paquete tiene que estar dentro del camión y el camión tiene que estar en cB.
-
-### ¿Qué operador puede producir (in p1 t1) en el ejemplo?
-Solo `load p1 t1 ?city`, porque ni Start ni otro paso lo dan. Al añadirlo aparece la variable `?city`, que puede valer cA o cB.
-
-### ¿Cómo se resuelve el subobjetivo (at t1 cA) de `load p1 t1 cA` en el ejemplo?
-De dos formas, que dan dos nodos hermanos: con el paso Start, que ya lo da, o con un paso nuevo `move t1 ?city3 cA`. En el ejemplo se exploran las dos.
-
-### ¿Qué amenaza aparece cuando se usa `move t1 cA cB` en el ejemplo?
-`move t1 cA cB` borra (at t1 cA), que `load p1 t1 cA` recibe de Start. El movimiento puede quedar entre ambos pasos y deshacer la condición.
-
-### ¿Cómo se resuelve esa amenaza y por qué solo hay una opción?
-Con democión: `load` antes que `move`. La promoción exigiría que `move` fuera antes que Start, lo cual es imposible. Una vez cargado el paquete, el camión ya puede irse.
 
 ## 6. POP y la anomalía de Sussman
 
 ### ¿Qué es la anomalía de Sussman?
 Un problema de bloques con dos metas, A sobre B y B sobre C, empezando con C sobre A y B en la mesa. Un planificador que resuelve un objetivo y luego el otro, con orden fijo, acaba deshaciendo el primero para conseguir el segundo.
 
-### ¿Por qué un planificador de espacio de estados sufre con Sussman?
-Porque tiene que comprometer el orden en que atiende las metas. Si empieza por A sobre B, tiene que desmontarlo para poner B sobre C. Si empieza por poner B sobre C tal como está, A queda enterrada bajo la torre. Los dos órdenes obligan a rehacer trabajo.
-
 ### ¿Cómo evita POP el problema de Sussman?
 Con mínimo compromiso. Construye los pasos de cada meta por separado, sin ordenarlos entre sí, y solo ordena cuando un enlace causal o una amenaza lo exige. El orden correcto sale de resolver esos fallos y no de adivinarlo de antemano.
-
-### En el ejercicio de Sussman con POP, ¿qué pasos quedan en el plan para conseguir la meta?
-Quitar C de encima de A y dejarlo en la mesa, coger B y ponerlo sobre C, y coger A y ponerlo sobre B. Los pasos de B quedan antes que los de A.
 
 ### En la anomalía de Sussman con POP, ¿por qué `stack A B` tiene que ir después de `stack B C`?
 Operadores: `pickup x` (precondiciones handempty, clear x y ontable x, efectos holding x y borra handempty, ontable x y clear x) y `stack x y` (precondiciones holding x y clear y, efectos on x y, clear x y handempty, y borra holding x y clear y). `stack A B` borra clear B, que `pickup B` necesita de Start, así que `pickup B` va antes que `stack A B`. Entonces Start ya no puede dar clear B a `stack A B`, porque `pickup B` lo borraría entre medias y no hay ni promoción ni democión. La otra fuente es `stack B C`, que añade clear B, y su enlace causal fuerza `stack B C` antes que `stack A B`.
@@ -279,25 +213,10 @@ Resolución. La promoción exigiría `stack A B` < Start, que es imposible. Qued
 ### ¿Por qué no sirve la detección de bucles de la búsqueda de estados en un plan parcial?
 Porque se basa en reconocer estados ya vistos, y en un plan parcial no se conocen los estados, ya que el orden no está fijado.
 
-### ¿Se puede podar un plan parcial por repetir la misma acción?
-No. A veces la misma acción hace falta varias veces en distintos estados del mundo, como ir de b a a y volver. Podar por repetición perdería soluciones.
-
-### ¿Qué problema queda abierto en PSP según el resumen?
-Cómo podar los caminos infinitos. Sin estados no hay detección de bucles, y repetir una acción no es motivo suficiente de poda. Hacen falta buenos heurísticos para elegir fallos y resolutores.
-
 ## 8. Heurísticas en planificación en el espacio de planes
-
-### ¿Por qué importa en qué orden se resuelven los fallos?
-Porque distintas estrategias dan árboles serializados de distinto tamaño. En el peor caso el planificador recorre todo el árbol, así que cuanto más pequeño sea, más eficiente es.
 
 ### ¿Cuál es el factor de ramificación efectivo de PSP para un objetivo?
 $B_g = B \cdot m^a$, con $B$ resolutores del objetivo, $a$ amenazas en cada plan resultante y $m$ resolutores por amenaza.
-
-### Calcula $B_g$ para un objetivo con 2 resolutores, 2 amenazas en cada plan y 2 resolutores por amenaza.
-$B_g = 2 \cdot 2^2 = 8$. Cada resolutor del objetivo genera planes con amenazas, y cada amenaza se multiplica por sus resolutores.
-
-### ¿Por qué PSP necesita buenos heurísticos de selección?
-Porque con $n$ pasos y $p$ precondiciones por paso la complejidad en tiempo es exponencial, del orden de $B_g$ elevado a $n p$. Sin heurísticos de fallos y resolutores solo sería eficiente en problemas muy pequeños.
 
 ### ¿Qué es la heurística Fewest Alternatives First (FAF)?
 Elegir el fallo que tiene menos resolutores. Con pocos resolutores se ramifica menos, y un fallo sin resolutores corta la rama de inmediato.
@@ -307,9 +226,6 @@ LIFO (el último fallo generado primero), retrasar las amenazas potenciales y ZL
 
 ### ¿Qué criterio general se usa para elegir el resolutor?
 Elegir el plan parcial de menor coste con un algoritmo A*, con $f(\pi) = g(\pi) + h(\pi)$. Aquí $g$ es el coste desde el plan inicial hasta $\pi$ y $h$ estima el coste que falta hasta un plan solución.
-
-### ¿Qué elementos de un plan $\pi$ pueden entrar en $f = g + h$?
-El número de pasos $N(\pi)$, el número de subobjetivos pendientes $OP(\pi)$ y el número de amenazas $T(\pi)$. Lo habitual es $f(\pi) = N(\pi) + OP(\pi)$.
 
 ### ¿Garantiza $f = N + OP$ una solución óptima?
 No, porque $OP$ no es admisible. Un subobjetivo pendiente se puede cerrar sin pasos nuevos, por ejemplo con Start, y un solo paso nuevo puede cerrar varios a la vez. En ambos casos $OP$ sobreestima lo que falta.

@@ -1,61 +1,26 @@
 # PIN U2 - Representación y PDDL
 
-## 1. Por qué representar los estados con rasgos
-
-### ¿Por qué no se enumeran explícitamente los estados s0, s1, s2... de un problema de planificación?
-Porque en casi cualquier problema hay demasiados. Cada estado se describe con rasgos, es decir, con un vector de valores de variables o con un conjunto de átomos base de un lenguaje de primer orden.
-
-### ¿Qué hay que dar como entrada para que un planificador genere todos los estados necesarios?
-Solo el estado inicial y un conjunto de operadores. Los demás estados se generan aplicando operadores cuando hacen falta.
-
 ## 2. Representación clásica
 
 ### ¿Qué ocho supuestos restrictivos exige la planificación clásica?
 Conjunto de estados finito, entorno totalmente observable, determinista y estático, objetivos de consecución, planes secuenciales, tiempo implícito y planificación offline. En las transparencias van de A0 a A7.
 
-### ¿Qué restricción tiene el lenguaje de primer orden de la representación clásica?
-No tiene símbolos de función. Solo hay un número finito de símbolos de predicado y de constante, y con ello el número de átomos base posibles es finito.
-
 ### ¿Qué diferencia hay entre una relación fija y una relación dinámica? Pon un ejemplo de cada una en el dominio de transporte (DWR).
 Una relación fija nunca cambia durante el plan, como `adjacent(loc1,loc2)` o `belong(crane1,loc1)`. Una dinámica sí cambia, como `at(r1,loc2)` o `holding(crane1,c3)`. Ambas se escriben como átomos.
 
-### ¿Cuándo una expresión es base (*ground*) y cuándo no lo es?
-Es base si no contiene ningún símbolo de variable, como `in(c1,p3)`. Si tiene al menos una variable, como `in(c1,x)`, no es base.
-
-### ¿Qué es una sustitución y qué es una instancia de una expresión?
-Una sustitución $\theta = \{x_1 \leftarrow v_1, \dots, x_n \leftarrow v_n\}$ asigna un término a cada variable. La instancia de una expresión $e$ es el resultado de aplicarle $\theta$.
-
-### ¿Por qué las variables de una sustitución se reemplazan a la vez y no una tras otra?
-Porque un reemplazo secuencial puede contaminar el resultado. Con $\theta = \{x \leftarrow y, y \leftarrow c1\}$, la expresión `on(x,y)` da `on(y,c1)` de golpe. Si se hiciera en dos pasadas, el primer paso daría `on(y,y)` y el segundo `on(c1,c1)`.
-
 ### ¿Qué es un estado en la representación clásica?
 Un conjunto de átomos base: los que son ciertos en ese estado. Como hay finitos átomos base, también hay finitos estados.
-
-### Si el lenguaje tiene $n$ átomos base posibles, ¿cuántos estados distintos puede haber como máximo?
-$2^n$, porque cada átomo está o no está en el conjunto. La mayoría no son alcanzables desde el estado inicial, pero el número es finito.
-
-### ¿Qué es un literal y qué dos tipos hay?
-Un átomo base, positivo o negado. Positivo, como `in(c1,p1)`, y negativo, como `¬occupied(loc1)`. En ambos casos representa algo que es cierto en el estado.
-
-### ¿Qué significa escribir un estado solo con literales positivos?
-Que se aplica negación por fallo: todo lo que no aparece en el estado es falso. Es el convenio de PDDL. Si el estado incluye también literales negativos, la información falsa se escribe de forma explícita.
 
 ## 3. Operadores y acciones
 
 ### ¿De qué tres partes consta un operador de planificación clásica?
 Es una terna $o = (\text{name}(o), \text{precond}(o), \text{effects}(o))$. La precondición son los literales que deben ser ciertos para usarlo, y los efectos son los literales que el operador hace ciertos.
 
-### ¿Qué forma tiene el nombre de un operador y por qué debe llevar todas las variables?
-Tiene la forma $n(x_1, \dots, x_k)$, con $n$ único para cada operador y con todas las variables que aparecen en él. Así cada instancia se identifica sin ambigüedad, por ejemplo `take(crane1,loc1,c3,c1,p1)`.
-
 ### ¿Qué diferencia hay entre un operador y una acción?
 Una acción es una instancia base de un operador, obtenida con una sustitución. El operador tiene variables, mientras que la acción tiene todos sus argumentos fijados.
 
 ### ¿Qué es un dominio de planificación?
 Un lenguaje junto con un conjunto de operadores. Corresponde a un conjunto de sistemas de transiciones de estados, porque cada problema concreto, con sus objetos, instancia los mismos operadores y da un sistema distinto. El estado inicial no forma parte del dominio.
-
-### ¿Qué significan $\text{precond}^+(a)$, $\text{precond}^-(a)$, $\text{effects}^+(a)$ y $\text{effects}^-(a)$?
-Los átomos que aparecen en positivo y en negativo en la precondición, y los que aparecen en positivo y en negativo en los efectos. Por ejemplo, $\text{effects}^+(\text{take}(k,l,c,d,p)) = \{\text{holding}(k,c), \text{top}(d,p)\}$.
 
 ### ¿Cuándo es aplicable una acción $a$ en un estado $s$?
 Cuando $\text{precond}^+(a) \subseteq s$ y $\text{precond}^-(a) \cap s = \emptyset$. Es decir, todos los átomos positivos de la precondición están en $s$ y ninguno de los negativos.
@@ -66,9 +31,6 @@ Se quitan los átomos de los efectos negativos y después se añaden los de los 
 
 ### Si un átomo está a la vez en $\text{effects}^+(a)$ y en $\text{effects}^-(a)$, ¿queda en el estado resultante?
 Sí. La fórmula primero lo quita y después lo añade, de modo que gana el efecto positivo. Es una trampa típica de modelado, y conviene no escribir el mismo átomo en los dos sentidos.
-
-### ¿Qué pasa con los átomos del estado que no aparecen en los efectos de la acción?
-Se conservan sin cambios. Un operador solo describe lo que cambia, y todo lo demás queda igual en el estado nuevo.
 
 ### En el dominio DWR, ¿qué tres precondiciones tiene `move(r,l,m)` y qué papel tiene `¬occupied(m)`?
 Exige `adjacent(l,m)`, `at(r,l)` y `¬occupied(m)`. La negativa impide que un robot entre en una localización donde ya hay otro robot.
@@ -87,9 +49,6 @@ Porque `c` queda ligado a un contenedor concreto, de modo que solo afirma que es
 
 ### Al modificar una precondición de un operador, ¿qué otros elementos del mismo operador hay que revisar y por qué?
 Los efectos que mantienen los mismos predicados. Una precondición nueva con los efectos antiguos puede dejar estados incoherentes, como un `occupied` falso.
-
-### ¿Qué precondiciones y efectos tienen `load(k,l,c,r)` y `unload(k,l,c,r)` en el DWR?
-`load` tiene precondición `belong(k,l)`, `holding(k,c)`, `at(r,l)` y `unloaded(r)`, y efectos `empty(k)`, `¬holding(k,c)`, `loaded(r,c)` y `¬unloaded(r)`. `unload` es el inverso: precondición `belong(k,l)`, `at(r,l)`, `loaded(r,c)` y `empty(k)`, y efectos `¬empty(k)`, `holding(k,c)`, `unloaded(r)` y `¬loaded(r,c)`.
 
 ### ¿Qué precondiciones y efectos tiene `take(k,l,c,d,p)` en el DWR?
 Precondición: `belong(k,l)`, `attached(p,l)`, `empty(k)`, `top(c,p)` y `on(c,d)`. Efectos: `holding(k,c)` y `top(d,p)`, y quita `empty(k)`, `in(c,p)`, `top(c,p)` y `on(c,d)`. Es el inverso de `put`.
@@ -129,17 +88,8 @@ $g = \{\text{loaded}(r1,c5), \text{at}(r1,l1)\}$ está contenido en $s_2$, de mo
 ### ¿Qué es el enunciado de un problema de planificación clásica?
 Una terna $P = (O, s_0, g)$: los operadores, el estado inicial y la fórmula objetivo $g$, que es un conjunto de literales.
 
-### ¿Cómo se define un problema de planificación en función del sistema de transiciones?
-Como $P=(\Sigma, s_0, S_g)$, con $\Sigma=(S,A,\gamma)$ el sistema de transiciones determinado por los operadores, $s_0$ el estado inicial y $S_g$ el conjunto de estados que satisfacen $g$. A menudo se dice "problema" para referirse al enunciado $P=(O,s_0,g)$.
-
 ### ¿Qué es un plan y cuándo es una solución?
 Un plan es cualquier secuencia de acciones $a_1, \dots, a_n$, cada una instancia de un operador. Es solución si es ejecutable desde $s_0$ y el estado final satisface $g$.
-
-### ¿Qué dos condiciones debe cumplir un plan para ser solución?
-Que sea ejecutable, es decir, que cada acción sea aplicable en el estado donde se ejecuta, y que el último estado satisfaga el objetivo. Un plan puede fallar por cualquiera de las dos.
-
-### ¿Por qué un problema de planificación clásica suele tener infinitas soluciones?
-Porque se pueden añadir acciones que se anulan entre sí, como ir y volver con el robot, sin estropear la ejecución ni el objetivo. Cada una de esas variantes es otra solución.
 
 ### ¿Qué es un plan redundante, uno irredundante y uno mínimo?
 Redundante es el que sigue siendo solución al quitarle algunas acciones. Irredundante es el que no admite quitar ninguna. Mínimo es el que no tiene ninguna solución más corta.
@@ -181,18 +131,6 @@ En el segundo plan, `pickup(a)` y `stack(a,b)` funcionan, pero después `clear b
 ### ¿Cómo se representa lo que cambia y lo que no cambia en la representación de variables de estado?
 Lo que no cambia sigue siendo un átomo, como `adjacent(loc1,loc2)`. Lo que cambia se convierte en una variable de estado con un valor, como un campo de un registro, por ejemplo `rloc(r1)=loc2` o `holding(crane1)=nil`.
 
-### ¿Qué ventaja tiene que `rloc(r1)` sea una variable con un solo valor, frente a un predicado `at(r1,l)` por cada localización?
-Un robot solo puede estar en una localización a la vez, y esa restricción queda incorporada: cambiar el valor sustituye al anterior. Con átomos hay que quitar `at(r1,l)` de forma explícita.
-
-### ¿Qué relación hay entre la representación clásica y la de variables de estado en poder expresivo y en tamaño?
-Tienen el mismo poder expresivo, y cada una se traduce a la otra en tiempo polinómico de orden bajo. Ocupan una cantidad de espacio parecida.
-
-### ¿Cuándo se prefiere cada una de las dos representaciones?
-La clásica es la más popular en planificación clásica, en parte por razones históricas, y resulta más natural para los lógicos. La de variables de estado es más natural para los ingenieros y sirve para manejar números, funciones y tiempo en planificación no clásica.
-
-### En la representación de variables de estado del mundo de bloques, ¿qué valores puede tomar `pos(x)` y `clear(x)`?
-`pos(x)` vale otro bloque `y`, `table` si está sobre la mesa o `nil` si lo sostiene la pinza. `clear(x)` vale 1 si no tiene nada encima y 0 si tiene algo encima o está sostenido.
-
 ### Problema: ejecutar acciones del mundo de bloques con variables de estado
 Estado: el bloque c está sobre a, y a y b están sobre la mesa. La pinza está libre. Con la representación de variables de estado, escribe el estado, ejecuta `unstack(c,a)` y después `stack(c,b)`, y compara el resultado con la forma clásica.
 #### Paso 1
@@ -214,26 +152,14 @@ En forma clásica es `{on c b, ontable a, ontable b, clear c, clear a, handempty
 
 ## 6. Mundo de bloques
 
-### ¿Qué supuestos se hacen en el mundo de bloques?
-Una mesa infinitamente ancha y un número finito de bloques, y no importa en qué punto de la mesa está un bloque. Un bloque está sobre la mesa o sobre otro, y la pinza sostiene como mucho un bloque a la vez.
-
-### ¿Cómo se relaciona el mundo de bloques con el dominio DWR?
-Es un caso particular del DWR con una localización, una grúa, contenedores como bloques y muchas más pilas de las necesarias.
-
 ### ¿Qué cinco predicados tiene la representación clásica del mundo de bloques?
 `ontable(x)`, `on(x,y)`, `clear(x)`, `holding(x)` y `handempty`. El último no tiene argumentos.
 
 ### ¿Qué precondición y qué efectos tienen `pickup(x)` y `unstack(x,y)` en la representación clásica?
 `pickup(x)` exige `ontable(x)`, `clear(x)` y `handempty`, quita esos tres y añade `holding(x)`. `unstack(x,y)` exige `on(x,y)`, `clear(x)` y `handempty`, quita esos tres y añade `holding(x)` y `clear(y)`.
 
-### ¿Para qué hacen falta tanto `pickup` como `unstack` si ambos dejan un bloque en la pinza?
-Porque parten de situaciones distintas. `pickup(x)` recoge un bloque de la mesa y `unstack(x,y)` lo recoge de encima de otro bloque `y`, que además queda libre.
-
 ### ¿Cuál es la precondición y cuáles son los efectos de `stack(x,y)` en la representación clásica?
 Precondición: `holding(x)` y `clear(y)`. Efectos: se quitan `holding(x)` y `clear(y)`, y se añaden `on(x,y)`, `clear(x)` y `handempty`.
-
-### ¿Por qué `stack(x,y)` añade `clear(x)` y quita `clear(y)`?
-Porque `x` queda encima de la torre, sin nada sobre él, mientras que `y` ya tiene un bloque encima y deja de estar libre.
 
 ### ¿Qué precondición y qué efectos tiene `putdown(x)`?
 Precondición: solo `holding(x)`. Efectos: se quita `holding(x)`, y se añaden `ontable(x)`, `clear(x)` y `handempty`.
@@ -249,26 +175,11 @@ Con `(:action nombre :parameters (...) :precondition (and ...) :effect (and ...)
 ### ¿Cómo se interpreta el estado inicial `:init` de un problema PDDL?
 Es una lista de átomos base positivos, y todo lo que no aparece se considera falso por negación por fallo. Por eso no se escriben los átomos falsos.
 
-### ¿Qué cuatro cosas se declaran en el fichero de problema de PDDL?
-El nombre del dominio con `(:domain ...)`, los objetos con `(:objects ...)`, el estado inicial con `(:init ...)` y el objetivo con `(:goal ...)`.
-
 ### ¿Qué aporta `:typing` en PDDL?
 Permite declarar tipos con `(:types ...)` y escribir los parámetros y los objetos con su tipo, como `?ob - block`. Una variable tipada solo se liga a objetos de ese tipo, lo cual reduce las acciones posibles.
 
-### ¿Qué dos errores de nombres impiden que un dominio y un problema PDDL se carguen juntos aunque cada uno sea correcto por separado?
-Que el nombre de `(:domain ...)` en el problema no coincida con el de `(define (domain ...))`, como `blockword` y `blocksworld` en las transparencias. Y que las acciones usen predicados con otro nombre del declarado, como `arm-empty` y `on-table` en las acciones cuando `:predicates` declara `handempty` y `ontable`. Además, en `?ob – block` el guion largo no es el guion que PDDL espera.
-
-### En la codificación de Hanoi con tres operadores, ¿cómo se evita poner el disco mediano sobre el pequeño?
-`move-medium` lleva la precondición `(not (= ?y S))`, que usa `:equality`. `move-large` solo acepta varillas como destino, de modo que nunca se apila sobre un disco. `move-small` no necesita restricción.
-
 ### En las torres de Hanoi, ¿cómo evita la codificación de un solo operador `move-disk` mover un disco grande sobre uno pequeño?
 Con el predicado estático `smaller`, que el problema lista en `:init` para cada par permitido, y con la precondición `(smaller ?disk ?new-below)`. No hace falta un operador por disco ni comparar nombres.
-
-### ¿Qué es un predicado estático y dónde se declara su valor?
-Es un predicado que ningún efecto modifica, como `adjacent` o `smaller`. Sus átomos se escriben una vez en `:init` y las precondiciones los consultan.
-
-### ¿Qué ventaja tiene la codificación de Hanoi con `smaller` frente a tener un operador por disco?
-Con $n$ discos no hace falta cambiar el dominio: solo se añaden objetos y hechos `smaller` al problema. Con un operador por disco habría que escribir uno nuevo por cada disco.
 
 ### ¿Por qué `move` del DWR hay que reescribirlo para el subconjunto STRIPS de PDDL?
 Porque `¬occupied(m)` es una precondición negativa y las acciones STRIPS del subconjunto solo admiten átomos positivos. Se sustituye por un predicado positivo, como `(free ?m)`, que `move` quita en el destino y añade en el origen. Las transparencias de Hanoi usan `:negative-preconditions`, que el subconjunto no incluye.
@@ -332,38 +243,14 @@ Si el robot intentara `pick(y,b)` antes de soltar x, no sería aplicable: falta 
 
 ## 8. El subconjunto de PDDL de la competición AIPS-2000
 
-### ¿En qué orden aparecen las secciones de un dominio en el subconjunto de PDDL?
-Nombre del dominio, `:requirements`, `:types`, `:constants`, `:predicates` y por último las acciones. Se pueden omitir, pero no cambiar de orden.
-
 ### ¿Qué diferencia hay entre `:constants` y `:objects`?
 `:constants` se declara en el dominio y son objetos que existen en todos los problemas. `:objects` se declara en el problema, es obligatorio, y puede incluir objetos que no aparecen en el estado inicial.
-
-### ¿Qué banderas de requisitos admite el subconjunto y cuál es el valor por defecto?
-El texto habla de dos banderas, `:strips` y `:adl`, aunque la gramática también lista `:typing` y el documento lo usa. Si no se declara ninguna, se asume `:strips`. Declarar `:adl` hace redundante `:strips`, porque ADL es un superconjunto.
 
 ### ¿Qué diferencia hay entre una acción STRIPS y una acción ADL en las precondiciones?
 En STRIPS la precondición es una conjunción de átomos positivos. En ADL puede ser una fórmula de primer orden con `not`, `and`, `or`, `imply`, `exists` y `forall`.
 
 ### ¿Qué efectos añade ADL respecto a STRIPS?
 Efectos condicionales con `(when <fórmula> <efectos>)` y efectos universales con `(forall (variables) ...)`. No se pueden anidar `when`.
-
-### ¿Por qué las precondiciones negativas no están en las acciones STRIPS del subconjunto?
-Porque una revisión del borrador, del 14 de febrero, las quitó de STRIPS, y para usarlas hay que pedir `:adl`. Un modelo STRIPS debe expresar lo negativo con un predicado positivo complementario.
-
-### ¿Qué regla deben cumplir las variables libres de una precondición o de un efecto?
-Todas deben aparecer en la lista `:parameters`. Una variable que aparece en la precondición y no está entre los parámetros es un error de sintaxis.
-
-### ¿Qué declara la lista tipada `integer float - number physob`?
-`integer` y `float` son subtipos de `number`, y `physob` es subtipo de `object`, que es el tipo por defecto cuando no sigue ningún tipo. Cada elemento toma el primer tipo que le sigue tras el guion.
-
-### ¿Qué hace `(either t1 t2)` en una declaración de tipo?
-Declara la unión de tipos: el parámetro puede ser de cualquiera de ellos. Se usa en Hanoi para decir que algo puede estar sobre un disco o sobre una varilla.
-
-### ¿Cómo define el subconjunto que un plan es solución de un problema?
-Es una secuencia de acciones factible desde el estado inicial tal que el objetivo es cierto en el estado resultante.
-
-### ¿Qué tres reglas sobre los nombres impone el subconjunto de PDDL?
-Empiezan por una letra y solo llevan letras, dígitos, guiones y guiones bajos. No distinguen mayúsculas. Son únicos: un mismo nombre no se define dos veces.
 
 ### Problema: encontrar y corregir los errores de un dominio PDDL
 Este fragmento del dominio del robot mensajero se rechaza o produce planes absurdos. Encuentra los errores y corrígelos para que sea una acción STRIPS correcta:

@@ -5,19 +5,10 @@
 ### ¿Qué calcula el algoritmo de backpropagation y qué no hace?
 Calcula el gradiente de la pérdida respecto a los parámetros de cada capa de un perceptrón multicapa. No actualiza nada: el gradiente se entrega a un algoritmo de optimización, como el descenso de gradiente, que es quien modifica los parámetros.
 
-### ¿Qué dos pasos se ejecutan en cada iteración de backprop?
-Primero la pasada forward, que recorre el modelo hacia delante y guarda la salida de cada capa. Después la pasada backward, que recorre el modelo hacia atrás y obtiene el gradiente de la pérdida respecto a los parámetros de cada capa.
-
-### ¿Quién popularizó backprop y cuándo?
-Werbos lo aplicó a perceptrones multicapa en 1982, de la forma que hoy es estándar. Rumelhart, Hinton y Williams lo popularizaron en un artículo de Nature de 1986.
-
 ## 2. Algoritmo de backprop
 
 ### ¿Cómo se modela una red para aplicar backprop?
 Como una cadena de $L-1$ capas, $x^{(1)}=x \to x^{(2)}=f^{(1)}(x^{(1)},\theta^{(1)}) \to \dots \to x^{(L)}=f^{(L-1)}(x^{(L-1)},\theta^{(L-1)})$. La pérdida se añade como la capa $L$, $x^{(L+1)}=f^{(L)}(x^{(L)},y)=\mathcal{L}$, que no tiene parámetros ($\theta=\emptyset$).
-
-### ¿Por qué se trata la pérdida como una capa más?
-Porque así toda la red es una sola cadena de funciones y el mismo esquema sirve para cualquier pérdida. La última capa no tiene parámetros, de modo que solo propaga el gradiente hacia atrás.
 
 ### ¿Qué calcula la pasada forward?
 $x^{(1)}=x$ y, para $\ell=1,\dots,L$, la salida $x^{(\ell+1)}=f^{(\ell)}(x^{(\ell)},\theta^{(\ell)})$. La última salida es el valor de la pérdida.
@@ -30,14 +21,8 @@ $$g^{(\ell)}=u^{(\ell+1)t}\,\frac{\partial x^{(\ell+1)}}{\partial \theta^{(\ell)
 
 Aquí $u^{(\ell)}$ es el gradiente de la pérdida respecto a $x^{(\ell)}$, que es la entrada de la capa $\ell$.
 
-### En backprop, ¿qué se hace con $g^{(\ell)}$ y qué con $u^{(\ell)}$?
-$g^{(\ell)}$ es el gradiente respecto a los parámetros de la capa $\ell$ y se entrega al optimizador. $u^{(\ell)}$ es el gradiente respecto a la entrada de esa capa y se pasa a la capa anterior para seguir la regla de la cadena.
-
 ### ¿Por qué hay que guardar las salidas de todas las capas durante el forward?
 Porque el backward las necesita para evaluar las derivadas locales. Por ejemplo, el gradiente de los pesos de una capa lineal usa su entrada, y el de una activación usa su preactivación.
-
-### ¿Por qué backprop recorre la red hacia atrás en lugar de hacia delante?
-Porque cada capa reutiliza el gradiente $u^{(\ell+1)}$ ya calculado para la capa siguiente. Así cada capa cuesta un producto de un vector por una matriz, y no hace falta multiplicar jacobianos enteros.
 
 ### ¿Qué gradientes tiene una capa lineal $x^{(\ell+1)}=Wx^{(\ell)}+b$ cuando recibe $u^t=\partial L/\partial x^{(\ell+1)}$ (fila)?
 $$\frac{\partial L}{\partial W}=x^{(\ell)}\,u^{t} \qquad \frac{\partial L}{\partial b}=u^{t} \qquad \frac{\partial L}{\partial x^{(\ell)}}=u^{t}\,W$$
@@ -50,31 +35,16 @@ Se multiplica elemento a elemento por la derivada de la activación: $\partial L
 ### ¿Qué forma tiene el gradiente de una matriz de pesos y cómo se usa en la actualización?
 En numerator layout $\partial L/\partial W$ tiene la forma de $W^t$ ($n\times m$ si $W$ es $m\times n$). Por eso la actualización traspone: $W\leftarrow W-\eta\,(\partial L/\partial W)^t$, y lo mismo con los sesgos.
 
-### ¿Cómo se pasa del gradiente en numerator layout al que tiene la forma del parámetro?
-Se traspone. Con $u$ columna, $\partial L/\partial W = x\,u^t$ en numerator layout y $\partial L/\partial W = u\,x^t$ con la forma de $W$ (la convención de PyTorch). Los dos contienen los mismos números y se diferencian en la traspuesta.
-
 ## 3. Ejemplo de regresión con una muestra
-
-### En un ejemplo de regresión con una muestra, red $3\to2\to1$ con sigmoide oculta y pérdida cuadrática, ¿cuáles son las capas y la pérdida?
-Entrada $x^{(1)}\in\mathbb{R}^3$, capa lineal a $\mathbb{R}^2$, sigmoide, capa lineal a $\mathbb{R}$ y pérdida cuadrática $L=(y-\hat y)^2$. Se hace una iteración de descenso de gradiente con tasa de aprendizaje $\eta$.
-
-### En una red $3\to2\to1$ con sigmoide entre las dos capas lineales, ¿por qué los parámetros de la capa de salida son $W^{(3)}$ y $b^{(3)}$ y no $W^{(2)}$?
-Porque la numeración cuenta también la sigmoide como capa 2, que no tiene parámetros. Por tanto, las capas con parámetros son la 1 y la 3.
 
 ### ¿Qué dimensiones tienen $W^{(1)}$, $b^{(1)}$, $W^{(3)}$ y $b^{(3)}$ en una red $3\to 2\to 1$?
 $W^{(1)}$ es $2\times 3$, $b^{(1)}$ tiene 2 componentes, $W^{(3)}$ es $1\times 2$ y $b^{(3)}$ es un escalar. Cada matriz tiene tantas filas como salidas y tantas columnas como entradas.
-
-### ¿Cuánto vale $\partial L/\partial \hat y$ para la pérdida cuadrática $L=(y-\hat y)^2$?
-$2(\hat y-y)$. Es la semilla del backward de la red, porque $u^{(L+1)}=1$ y la capa de pérdida solo aporta esta derivada.
 
 ### ¿Cómo se calculan los gradientes de la capa de salida lineal en ese ejemplo?
 Con $\delta=\partial L/\partial\hat y$: $\partial L/\partial W^{(3)}=\delta\,x^{(3)t}$ y $\partial L/\partial b^{(3)}=\delta$. El primero es la entrada de la capa ponderada por el error de salida. Se escribe con la forma de $W^{(3)}$, la traspuesta de la numerator layout.
 
 ### ¿Cómo llega el gradiente de la pérdida hasta la preactivación $x^{(2)}$ de la capa oculta?
 Primero atraviesa la capa lineal, $\partial L/\partial x^{(3)}=W^{(3)t}\delta$, y después la sigmoide: $\partial L/\partial x^{(2)}=\partial L/\partial x^{(3)}\odot\sigma'(x^{(2)})$.
-
-### ¿Qué gradientes tiene la primera capa lineal en términos de $\partial L/\partial x^{(2)}$?
-$\partial L/\partial W^{(1)}=\big(\partial L/\partial x^{(2)}\big)x^{(1)t}$ y $\partial L/\partial b^{(1)}=\partial L/\partial x^{(2)}$. Es la misma regla que en cualquier capa lineal. Igual que arriba, se escribe con la forma de $W^{(1)}$.
 
 ### ¿Cuál es la derivada de la sigmoide en función de la propia sigmoide?
 $\sigma'(z)=\sigma(z)\big(1-\sigma(z)\big)$. Es cómoda porque el forward ya calculó $\sigma(z)$, así que el backward no necesita volver a evaluar exponenciales.
@@ -141,13 +111,42 @@ $$W^{(1)}=\begin{pmatrix}2{,}1&-0{,}8\\0{,}95&-0{,}6\end{pmatrix}\qquad b^{(1)}=
 #### Paso 7
 Comprobación. Con los parámetros nuevos, $x^{(2)}=(0{,}6,\ -0{,}3)^t$, $x^{(3)}\approx(0{,}646,\ 0{,}426)^t$ y $\hat y\approx1{,}673$. Así $L\approx0{,}107$, mucho menor que la pérdida inicial 1.
 
+### ¿Qué añaden la regularización L2 y L1 a la pérdida y cómo cambia la actualización de un peso?
+Añaden a la pérdida una penalización sobre los pesos para prevenir el sobreajuste. Con L2 es $L+\frac{\lambda}{2}\|W\|_2^2$ y la actualización resta además un término proporcional al propio peso (decaimiento de pesos, *weight decay*). Con L1 es $L+\lambda\|W\|_1$ y se resta $\lambda\,\mathrm{sign}(W)$, un valor constante que empuja cada peso hacia cero.
+
+Con $\lambda'$ el coeficiente de la pérdida, la actualización resta $\eta\lambda'W$. En las claves del profesor $\lambda$ es ese producto $\eta\lambda'$ (ya absorbe la tasa), de modo que se escribe $W\leftarrow W-\eta\,\partial L/\partial W-\lambda W$ para L2 y $W\leftarrow W-\eta\,\partial L/\partial W-\lambda\,\mathrm{sign}(W)$ para L1 (allí la tasa se llama $\mu$). Con la tasa explícita delante de $\lambda$, el decaimiento L2 sale como $W(1-\eta\lambda)-\eta\,\partial L/\partial W$. (Complemento: las diapositivas solo mencionan el decaimiento de pesos en AdamW y la norma L2 de los pesos y la L1 sobre activaciones en el autoencoder disperso. Las penalizaciones y la regla sobre los pesos de un perceptrón multicapa son conocimiento estándar.)
+
+### Problema: un paso de descenso en la capa de salida lineal con L2 y con L1
+Red con entrada $x=(2,\ 1)^t$, capa oculta de dos ReLU y salida lineal $\hat y=W^{(3)}x^{(3)}+b^{(3)}$ con error $L=\frac12(y-\hat y)^2$. Datos: $W^{(1)}=\begin{pmatrix}1&1\\1&-1\end{pmatrix}$, $b^{(1)}=(0,\ 0)^t$, $W^{(3)}=(1,\ -2)$, $b^{(3)}=1$, objetivo $y=4$ y $\eta=0{,}05$. Calcula el error y los gradientes de la capa de salida y da la actualización de $W^{(3)}$ y $b^{(3)}$ (las capas anteriores no se actualizan) sin regularizar, con L2 y con L1, con $\lambda=0{,}05$ (que absorbe la tasa de aprendizaje) y penalizando solo $W^{(3)}$. Compara los tres resultados.
+#### Paso 1
+Forward. La preactivación oculta es $x^{(2)}=(2+1,\ 2-1)^t=(3,\ 1)^t$ y ambas son positivas, de modo que $x^{(3)}=(3,\ 1)^t$. La salida es
+
+$$\hat y=1\cdot3+(-2)\cdot1+1=2\qquad L=\tfrac12(4-2)^2=2$$
+#### Paso 2
+Gradientes de la capa de salida. Se parte de $\delta=\partial L/\partial\hat y=-(y-\hat y)=-2$. Entonces:
+
+$$\frac{\partial L}{\partial W^{(3)}}=\delta\,x^{(3)t}=-2\,(3,\ 1)=(-6,\ -2)\qquad\frac{\partial L}{\partial b^{(3)}}=-2$$
+#### Paso 3
+Sin regularizar:
+
+$$W^{(3)}=(1,\ -2)-0{,}05\,(-6,\ -2)=(1{,}3,\ -1{,}9)\qquad b^{(3)}=1-0{,}05\,(-2)=1{,}1$$
+#### Paso 4
+Con L2 se resta además $\lambda W$ con el peso anterior, $0{,}05\,(1,\ -2)=(0{,}05,\ -0{,}1)$:
+
+$$W^{(3)}=(1{,}3-0{,}05,\ -1{,}9+0{,}1)=(1{,}25,\ -1{,}8)$$
+#### Paso 5
+Con L1 se resta $\lambda\,\mathrm{sign}(W)$, con $\mathrm{sign}(W^{(3)})=(1,\ -1)$, que da $(0{,}05,\ -0{,}05)$:
+
+$$W^{(3)}=(1{,}3-0{,}05,\ -1{,}9+0{,}05)=(1{,}25,\ -1{,}85)$$
+
+En los dos casos el sesgo queda en $1{,}1$, porque no se penaliza.
+#### Paso 6
+Comparación. La nueva salida es $3{,}1$ sin regularizar, $3{,}05$ con L2 y $3{,}0$ con L1, todas más cerca del objetivo 4 que el valor inicial 2. Frente a sin regularizar, los pesos quedan más cerca de cero. Con L2 encoge más el de mayor valor absoluto ($-2$ pierde $0{,}1$ y $1$ pierde $0{,}05$), mientras que con L1 cada uno pierde lo mismo ($0{,}05$). Así $\|W\|_2^2$ vale $5$ al principio, $5{,}3$ sin regularizar, $4{,}8025$ con L2 y $4{,}985$ con L1. El precio es un error algo mayor tras el paso, $L=0{,}405$ sin regularizar frente a $0{,}451$ con L2 y a $0{,}5$ con L1.
+
 ## 4. Ejemplo de regresión con un lote (batch)
 
 ### ¿Cómo se organizan los datos y el forward cuando se procesa un lote de $N$ muestras?
 Cada muestra es una fila de $X\in\mathbb{R}^{N\times d}$. Una capa lineal se calcula como $X^{(\ell+1)}=X^{(\ell)}W^{(\ell)t}+\mathbf{1}\,b^{(\ell)t}$, donde $\mathbf{1}$ es un vector de unos de longitud $N$ que copia el sesgo en todas las filas.
-
-### ¿Por qué en el forward de un lote aparecen $W^t$ y $b^t$?
-Porque cada muestra es una fila de $X$. El lote entra como una sola multiplicación $X^{(\ell)}W^{(\ell)t}$ y el sesgo se suma como fila a todas las muestras, lo que es más eficiente. Los parámetros se guardan con su forma de siempre.
 
 ### ¿Cómo se define la pérdida cuadrática de un lote?
 Como la media de los errores individuales: $L=\dfrac1N\sum_n(y_n-\hat y_n)^2=\dfrac1N(y-\hat y)^t(y-\hat y)$.
@@ -163,12 +162,6 @@ Sumando por muestras el gradiente respecto a la salida: $\partial L/\partial b=\
 
 ### ¿Cómo se propaga el gradiente a la entrada de una capa lineal con un lote?
 $\partial L/\partial X=\big(\partial L/\partial X_{\text{sal}}\big)W$. Cada fila (muestra) recibe el gradiente de su propia salida multiplicado por $W$, sin mezclarse con las demás muestras.
-
-### ¿Cómo se pasa de una muestra a un lote en el backward y en la actualización?
-La actualización de parámetros es la misma, $\theta\leftarrow\theta-\eta\,\partial L/\partial\theta$. Lo único que cambia es que el gradiente es una suma sobre las muestras, ya escalada por $1/N$, y no el de una sola muestra.
-
-### En las transparencias, ¿cómo se guardan los gradientes $\partial L/\partial X$ de un lote?
-Traspuestos, con cada muestra en una columna (forma características por muestras). Por eso allí aparece $X^{(1)t}(\cdot)^t$. El resultado final del gradiente de pesos es el mismo, y lo que conviene recordar es que el producto con $X^t$ suma sobre las muestras.
 
 ### Problema: forward y backward con un lote de dos muestras y capa oculta ReLU
 Red con entrada $x\in\mathbb{R}^2$, capa oculta de dos ReLU y salida lineal, con pérdida $L=\tfrac1N\sum_n(y_n-\hat y_n)^2$. Datos: $X=\begin{pmatrix}1&2\\3&0\end{pmatrix}$, $y=(1,\ 4)^t$, $W^{(1)}=I$, $b^{(1)}=(0,\ -1)^t$, $W^{(3)}=(1,\ 1)$, $b^{(3)}=0$ y $\eta=0{,}1$. Haz una iteración. Los gradientes de matrices se escriben con la forma del parámetro, traspuestos respecto a las transparencias.
@@ -209,23 +202,11 @@ Comprobación. Con los parámetros nuevos, $\hat y=(1{,}32,\ 4{,}32)^t$ y $L=\fr
 
 ## 5. Ejemplo de XOR con salida softmax
 
-### ¿Qué arquitectura se usa en el ejemplo de XOR con softmax?
-Entrada $x\in\{0,1\}^2$, capa lineal a $\mathbb{R}^2$, ReLU, capa lineal a $\mathbb{R}^2$, softmax con dos clases y pérdida de entropía cruzada $L=H(y,\hat y)=-y^t\log\hat y$, con $y$ en codificación one-hot.
-
 ### ¿Cómo se define la función softmax y qué propiedades tiene su salida?
 $S(z)_k=\dfrac{e^{z_k}}{\sum_j e^{z_j}}$. Cada componente está en $[0,1]$ y la suma de las componentes es 1, de modo que se interpreta como una distribución de probabilidad sobre las clases.
 
 ### ¿Qué calcula la entropía cruzada con una etiqueta one-hot?
 $L=-y^t\log\hat y$ es el logaritmo negativo de la probabilidad que el modelo asigna a la clase correcta, porque solo sobrevive el término donde $y_k=1$. Si el modelo asigna probabilidad 1 a la clase correcta, la pérdida es 0.
-
-### ¿Cuánto vale $\partial L/\partial\hat y$ para la entropía cruzada?
-$-\,y\oslash\hat y$, es decir, $-y_k/\hat y_k$ en cada componente. Solo la clase correcta tiene derivada distinta de cero, y es muy grande si $\hat y_k$ es pequeño.
-
-### ¿Cuánto vale el gradiente respecto a los logits $x^{(4)}$ cuando se combinan softmax y entropía cruzada?
-$\partial L/\partial x^{(4)}=\hat y-y$. Es la simplificación que usan las transparencias para saltar el jacobiano del softmax, y se obtiene de multiplicar $-y\oslash\hat y$ por ese jacobiano.
-
-### ¿Qué suma tienen las componentes del gradiente $\hat y-y$ respecto a los logits de una softmax con entropía cruzada?
-Suman 0, porque tanto $\hat y$ como $y$ suman 1. Sirve de comprobación rápida de las cuentas: en cada fila del gradiente de los logits, la suma tiene que dar cero.
 
 ### ¿Cómo se escribe la pérdida de entropía cruzada de un lote de $N$ muestras?
 $L=-\dfrac1N\,\mathbf{1}^t\big(Y\odot\log\hat Y\big)\mathbf{1}$. Se multiplican elemento a elemento las etiquetas y los logaritmos, se suma todo y se divide entre $N$. El gradiente respecto a los logits es entonces $\frac1N(\hat Y-Y)$.
@@ -233,14 +214,8 @@ $L=-\dfrac1N\,\mathbf{1}^t\big(Y\odot\log\hat Y\big)\mathbf{1}$. Se multiplican 
 ### ¿Cuánto valen $\mathrm{ReLU}(z)$ y $\mathrm{ReLU}'(z)$?
 $\mathrm{ReLU}(z)=\max(0,z)$. Su derivada es 1 si $z>0$ y 0 si $z\le 0$. En $z=0$ las transparencias toman derivada 0.
 
-### ¿Cómo atraviesa el gradiente una ReLU?
-Se multiplica elemento a elemento por 1 donde la preactivación es positiva y por 0 donde no lo es. El gradiente pasa intacto por las unidades activas y se anula en las inactivas.
-
 ### ¿Qué pasa con los pesos de una unidad ReLU que está inactiva ($z\le0$) para una muestra?
 Esa muestra no aporta gradiente a la fila de pesos ni al sesgo de esa unidad, porque la ReLU lo anula. Si la unidad está inactiva para todas las muestras, sus parámetros no se mueven (unidad muerta).
-
-### ¿Cuántas salidas tiene la capa final con softmax para dos clases y qué etiqueta usa?
-Dos salidas, una por clase, con etiqueta one-hot (por ejemplo, $(1,0)$ y $(0,1)$). Con una sola salida sigmoide haría falta una etiqueta escalar $y\in\{0,1\}$.
 
 ### Demostración: gradiente de softmax con entropía cruzada
 Demuestra que, con $\hat y=S(z)$ y $L=-\sum_i y_i\log\hat y_i$ con $y$ one-hot (suma 1), se cumple $\partial L/\partial z_k=\hat y_k-y_k$.
@@ -329,26 +304,11 @@ Comprobación. Con los parámetros nuevos, la pérdida baja a $L\approx0{,}0695$
 
 ## 6. Ejercicio: XOR con salida sigmoide
 
-### Si en el XOR la salida pasa de softmax con dos neuronas a una sola neurona sigmoide, ¿qué cambia en la capa final y en la pérdida?
-La capa final tiene una sola salida, $x^{(4)}\in\mathbb{R}$, con $\hat y=\sigma(x^{(4)})\in[0,1]$ como probabilidad de la clase 1. La pérdida pasa a ser la entropía cruzada binaria $L=-y\log\hat y-(1-y)\log(1-\hat y)$ con $y\in\{0,1\}$.
-
-### ¿Cuánto vale $\partial L/\partial\hat y$ para la entropía cruzada binaria?
-$\dfrac{\hat y-y}{\hat y(1-\hat y)}$. Se obtiene de derivar $-y\log\hat y-(1-y)\log(1-\hat y)$ y agrupar los dos términos sobre un denominador común.
-
-### ¿Por qué el gradiente respecto al logit de una salida sigmoide con entropía cruzada binaria es $\hat y-y$?
-Porque $\partial L/\partial x^{(4)}=\dfrac{\hat y-y}{\hat y(1-\hat y)}\cdot\sigma'(x^{(4)})$ y $\sigma'=\hat y(1-\hat y)$ cancela el denominador. Es la misma forma que con softmax y entropía cruzada.
-
-### ¿Qué pérdida binaria sale si el modelo predice $\hat y=0{,}5$?
-$\ln2\approx0{,}693$, sea cual sea la etiqueta, porque $-\log0{,}5$ es el mismo valor para $y=1$ y para $y=0$. Es la pérdida de un modelo que no sabe nada.
-
 ### ¿Cómo se escribe la pérdida binaria de un lote de $N$ muestras?
 $L=-\dfrac1N\big(y^t\log\hat y+(1-y)^t\log(1-\hat y)\big)$, con $y$ y $\hat y$ vectores columna de $N$ componentes. El gradiente respecto a los logits es $\frac1N(\hat y-y)$.
 
 ### ¿Qué relación hay entre un softmax de dos clases y una sigmoide?
 Con dos logits $z_1$ y $z_2$, el softmax da $\hat y_1=\sigma(z_1-z_2)$, porque solo importa la diferencia. Una salida sigmoide con un único logit equivale a fijar la diferencia como ese logit.
-
-### ¿Qué forma tiene el gradiente hacia la última capa oculta con salida sigmoide de una unidad?
-Con $\delta=\partial L/\partial x^{(4)}=\hat y-y$ (escalar por muestra), $\partial L/\partial x^{(3)}=W^{(3)t}\delta$ y $\partial L/\partial W^{(3)}=\delta\,x^{(3)t}$. Como $W^{(3)}$ es $1\times2$, $W^{(3)t}$ reparte $\delta$ entre las dos unidades ocultas con un peso cada una. Aquí el gradiente de $W^{(3)}$ se escribe con la forma del parámetro.
 
 ### Problema: una iteración con ReLU oculta y salida sigmoide con entropía cruzada binaria
 Red con entrada $x\in\mathbb{R}^2$, capa oculta de dos ReLU y salida $\hat y=\sigma(W^{(3)}x^{(3)}+b^{(3)})$ con pérdida $L=-y\log\hat y-(1-y)\log(1-\hat y)$. Datos: $x=(1,\ 1)^t$, $y=0$, $W^{(1)}=\begin{pmatrix}1&1\\-1&-1\end{pmatrix}$, $b^{(1)}=(0,\ 0{,}5)^t$, $W^{(3)}=(1,\ 2)$, $b^{(3)}=-1$ y $\eta=0{,}5$. Los gradientes de matrices se escriben con la forma del parámetro, traspuestos respecto a las transparencias.
@@ -386,3 +346,38 @@ $$W^{(3)}=(1,\ 2)-0{,}5(1{,}4621,\ 0)=(0{,}2689,\ 2)\qquad b^{(3)}=-1-0{,}5\cdot
 $$W^{(1)}=\begin{pmatrix}0{,}6345&0{,}6345\\-1&-1\end{pmatrix}\qquad b^{(1)}=\begin{pmatrix}-0{,}3655\\0{,}5\end{pmatrix}$$
 #### Paso 7
 Comprobación. Con los parámetros nuevos, $x^{(2)}=(0{,}9034,\ -1{,}5)^t$, $x^{(3)}=(0{,}9034,\ 0)^t$ y $x^{(4)}\approx-1{,}123$. Entonces $\hat y\approx0{,}2455$ y $L\approx0{,}2817$, mucho menor que $1{,}3133$.
+
+### ¿Qué activación de salida y qué pérdida corresponden a regresión, clasificación binaria, multiclase y multietiqueta?
+Se elige según lo que representa la salida:
+
+| Tarea | Activación de salida | Pérdida | Salidas |
+|---|---|---|---|
+| Regresión | lineal | error cuadrático | cualquier real |
+| Clasificación binaria | sigmoide (una salida) | entropía cruzada binaria | probabilidad de la clase positiva |
+| Multiclase de una sola etiqueta | softmax | entropía cruzada | suman 1 |
+| Multietiqueta | una sigmoide por clase | entropía cruzada binaria por clase | no suman 1, cada una va de 0 a 1 |
+
+En T01 el error cuadrático se llama "Quadratic Loss (L2)", y no es la regularización L2.
+
+(Complemento: la clasificación multietiqueta no aparece en las diapositivas, que sí tratan la salida lineal, el softmax y la sigmoide.)
+
+### Problema: los mismos logits con softmax y con sigmoide por clase
+Una red da los logits $z=(1{,}5,\ 0{,}5,\ -1)$ para tres clases. Calcula las probabilidades con softmax y la clase predicha. Calcula también las probabilidades con una sigmoide por clase y las clases asignadas con umbral $0{,}5$. Después resta 2 a todos los logits y repite las dos cuentas.
+#### Paso 1
+Exponenciales: $e^{1{,}5}=4{,}4817$, $e^{0{,}5}=1{,}6487$ y $e^{-1}=0{,}3679$. Su suma es $6{,}4983$.
+#### Paso 2
+Softmax, dividiendo por la suma:
+
+$$\mathrm{softmax}(z)=(0{,}6897,\ 0{,}2537,\ 0{,}0566)$$
+
+Suman 1 y la clase predicha es la primera, la más probable.
+#### Paso 3
+Sigmoide por clase, $\sigma(z)=1/(1+e^{-z})$:
+
+$$\sigma(z)=(0{,}8176,\ 0{,}6225,\ 0{,}2689)$$
+
+Con umbral $0{,}5$ se asignan las clases 1 y 2. Las salidas suman $1{,}7090$, de modo que no son una distribución. Cada clase se decide por separado.
+#### Paso 4
+Con $z'=z-2=(-0{,}5,\ -1{,}5,\ -3)$ el softmax no cambia, porque restar una constante a todos los logits multiplica numerador y denominador por el mismo factor. Sigue dando $(0{,}6897,\ 0{,}2537,\ 0{,}0566)$ y predice la primera clase. Las sigmoides pasan a $(0{,}3775,\ 0{,}1824,\ 0{,}0474)$ y ninguna supera $0{,}5$, de modo que no se asigna ninguna clase.
+#### Paso 5
+Conclusión: el softmax obliga a elegir exactamente una clase y solo depende de las diferencias entre logits. La sigmoide por clase puede asignar varias o ninguna, porque depende del valor de cada logit.

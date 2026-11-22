@@ -2,17 +2,8 @@
 
 ## 1. Aprender de datos
 
-### ¿Qué tipos de datos se distinguen para aprender a traducir?
-Monolingües (un solo idioma), multilingües (textos en varios idiomas, sin marcar qué frase corresponde a cuál) y paralelos (pares que son traducción mutua). Los paralelos pueden ser de texto a texto, de voz a texto, de texto a voz o de voz a voz.
-
-### ¿Qué tipo de datos hace falta para aprender un modelo de traducción?
-Datos paralelos, porque el modelo necesita ver qué frase de un idioma corresponde a qué frase del otro.
-
 ### Si se conociera el alineamiento de palabras de un corpus paralelo, ¿cómo se obtendría el diccionario probabilístico?
 Contando cuántas veces cada palabra origen está alineada con cada palabra destino y normalizando. Como el alineamiento no se conoce, hay que aprenderlo de los datos.
-
-### Si EM del modelo IBM 1 arranca de una distribución uniforme, ¿puede distinguir dos palabras origen que aparecen exactamente en las mismas frases?
-No. Intercambiar sus tablas $p(\cdot \mid v)$ no cambia la verosimilitud, así que EM les da la misma distribución. Pasa lo mismo con dos palabras destino que aparecen siempre en las mismas frases. El corpus no contiene esa información, de modo que con pocos datos EM aprende coocurrencia y no traducción.
 
 ## 2. Modelos basados en palabras
 
@@ -24,9 +15,6 @@ La palabra NULL del origen, para las palabras destino que no corresponden a ning
 
 ### ¿Por qué un alineamiento de palabras no puede unir una palabra destino con dos palabras origen?
 Porque $a$ es una función: asigna una sola posición origen a cada posición destino. Esta limitación motiva los modelos basados en frases.
-
-### ¿Por qué se suma sobre todos los alineamientos para calcular $P(y \mid x)$?
-Porque el alineamiento es una variable oculta: no se observa en los datos.
 
 ### ¿Cómo se escribe $P(y \mid x)$ cuando el alineamiento $a$ es una variable oculta?
 Se suma sobre todos los alineamientos: $P(y \mid x) = P(I \mid x) \sum_a P(y, a \mid I, x)$, con $I$ la longitud de $y$.
@@ -51,9 +39,6 @@ $$a_{nij} = \frac{p(y_{ni} \mid x_{nj})}{\sum_{j'} p(y_{ni} \mid x_{nj'})}$$
 ### ¿Qué calcula el paso M del entrenamiento del modelo IBM 1?
 La cuenta esperada de cada par (palabra origen $v$, palabra destino $u$), sumando $a_{nij}$ en todas las frases. Después normaliza para que $\sum_u p(u \mid v) = 1$.
 
-### En el corpus de cuatro frases inglés a euskera de clase, ¿qué aprende el IBM 1 sobre «the» tras 5 iteraciones?
-Que p(urdina | the) es 0,77, igual que p(urdina | blue), porque «the» y «blue» aparecen siempre juntas con «urdina». No aprende the a NULL, que sería la solución correcta, porque el corpus no contiene la información para separarlas.
-
 ### ¿Qué cambia el modelo IBM 2 respecto al 1?
 Que la probabilidad de alineamiento depende de la posición: $p(a_i \mid i, J, I)$ en lugar de ser uniforme. Se entrena con el mismo EM y una tabla más.
 
@@ -62,9 +47,6 @@ La fertilidad, es decir, cuántas palabras destino genera cada palabra origen, e
 
 ### ¿Qué añade el modelo de alineamiento HMM?
 Una dependencia de primer orden: el alineamiento de una palabra depende del alineamiento de la anterior.
-
-### ¿Qué herramienta se usa para entrenar los modelos IBM?
-GIZA++, de Och. Los modelos IBM se publicaron en Brown et al. (1993).
 
 ### Demostración: en el modelo IBM 1 la suma sobre alineamientos se convierte en un producto de sumas
 Demuestra que $\sum_a \prod_i p(y_i \mid x_{a_i}) / (J+1)$ se puede calcular como un producto de sumas.
@@ -111,12 +93,6 @@ En una sola iteración, house ya se inclina hacia casa, porque casa es la única
 
 ## 3. Modelos basados en frases
 
-### ¿Qué motiva los modelos basados en frases?
-Capturar correspondencias de muchas palabras a muchas palabras, lo que incluye contexto. Los modelos de palabras solo permiten que cada palabra destino venga de una palabra origen.
-
-### ¿Qué dos familias de modelos basados en frases hay?
-Generativos, con variables ocultas de segmentación y alineamiento, y heurísticos, que simetrizan el alineamiento y estiman por frecuencias relativas.
-
 ### ¿Cuáles son los pasos de la extracción heurística de frases?
 1. Entrenar un alineamiento de palabras en cada dirección.
 2. Tomar la intersección de los dos y añadir de forma heurística enlaces de la unión.
@@ -124,9 +100,6 @@ Generativos, con variables ocultas de segmentación y alineamiento, y heurístic
 
 ### ¿Cuándo es consistente un par de frases con un alineamiento?
 Cuando ninguna palabra del par está alineada con una palabra de fuera del par. Las palabras sin alinear sí pueden quedar dentro. Además, el par debe tener al menos un enlace dentro.
-
-### ¿Por qué un mal alineamiento de palabras estropea la tabla de frases?
-Porque un enlace erróneo hace inconsistentes pares que serían correctos. Por ejemplo, si «the» y «blue» se alinean las dos con «azul», el par «blue / azul» no se puede extraer, porque «azul» está unida también a una palabra de fuera.
 
 ### ¿Cómo se estima $p(\bar{y} \mid \bar{x})$ en el enfoque heurístico?
 Por frecuencias relativas de los pares extraídos:
@@ -150,9 +123,6 @@ La cobertura de la frase origen (qué palabras se han traducido ya), el prefijo 
 ### En la decodificación multipila, ¿qué hipótesis guarda cada pila y en qué orden?
 Las que tienen la misma cobertura de la frase origen, ordenadas de mayor a menor puntuación. Se expanden las que están arriba de cada pila.
 
-### ¿Qué diferencia hay entre la poda por haz y la poda por histograma?
-La poda por haz descarta las hipótesis que se alejan demasiado de la mejor, o que quedan bajo un umbral. La poda por histograma limita el número de hipótesis de cada pila.
-
 ### Problema: decide qué pares de frases son consistentes con un alineamiento
 Origen «the red car» y destino «el coche rojo», con los enlaces the–el, red–rojo y car–coche. ¿Son consistentes «red car / coche rojo», «the / el» y «the red / el coche rojo»?
 #### Paso 1
@@ -163,15 +133,6 @@ Origen «the red car» y destino «el coche rojo», con los enlaces the–el, re
 «the red / el coche rojo»: el lado español contiene coche, que está alineada con car, y car queda fuera de «the red». No es consistente. Tampoco sirve un par «the red / el … rojo» sin coche, porque una frase es una secuencia contigua.
 
 ## 4. Evaluación
-
-### ¿Por qué es difícil evaluar la traducción automática?
-Porque no hay una única traducción correcta: hay muchas aceptables y nunca se dispone de todas.
-
-### ¿Qué ventajas e inconvenientes tiene la evaluación automática frente a la manual?
-La automática es objetiva y rápida y permite comparar sistemas, pero solo aproxima la calidad. La manual refleja la calidad real, pero es subjetiva y cara en tiempo y dinero.
-
-### Cita métricas automáticas que usan una traducción de referencia.
-WER, BLEU, METEOR y COMET. También TER, chrF y MetricX-23.
 
 ### ¿Cuál es la fórmula de BLEU?
 $$\text{BLEU} = BP \cdot \exp\left(\sum_{n=1}^{N} w_n \log p_n\right)$$
@@ -201,59 +162,26 @@ Solo cuenta coincidencias exactas de n-gramas. Un sinónimo correcto, como «hom
 ### ¿Qué ve COMET que no ve BLEU?
 La frase origen. COMET es una métrica neuronal que compara origen, hipótesis y referencia, y se entrena para imitar juicios humanos (DA, HTER y MQM).
 
-### ¿Qué codificador usa COMET?
-Un codificador multilingüe basado en XLM-RoBERTa, aplicado a la frase origen, la hipótesis y la referencia.
-
 ### ¿Qué diferencia hay entre el modelo estimador y el modelo de ranking de COMET?
 El estimador es un regresor que predice una puntuación de calidad y minimiza el error cuadrático medio contra juicios humanos. El de ranking aprende a dejar la hipótesis peor más lejos del ancla (el origen o la referencia) que la mejor, con una pérdida de tripleta.
-
-### ¿Cómo puntúa el modelo de ranking de COMET una única hipótesis $h$?
-Con $\hat{f} = 1/(1+f)$, donde $f$ es la media armónica de $d(s,h)$ y $d(r,h)$, las distancias de la hipótesis al origen y a la referencia.
 
 ### ¿Se pueden comparar directamente las puntuaciones de COMET y de BLEU?
 No. Tienen escalas distintas. En el ejemplo de clase, COMET da 0,92 a «home is blue» y 0,99 a una traducción perfecta, mientras que BLEU separa mucho más ambas frases.
 
-### ¿Qué entradas usa COMET con referencia y cuáles COMET-Kiwi?
-COMET con referencia usa origen, hipótesis y referencia. COMET-Kiwi es de estimación de calidad y solo usa origen e hipótesis.
-
 ### ¿Qué es la estimación de calidad (QE)?
 Estimar la calidad de una traducción sin referencia, solo con la frase origen y la hipótesis. Un ejemplo es COMET-Kiwi.
-
-### ¿Para qué se usa la estimación de calidad a nivel de frase?
-Para decidir si una traducción se publica tal cual, avisar al lector de si puede fiarse, filtrar las frases que no merecen post-edición y elegir la mejor entre varios sistemas.
-
-### ¿Para qué se usa la estimación de calidad a nivel de palabra y en producción?
-Para marcar las palabras que hay que editar, combinar segmentos de varios sistemas, filtrar bitexto web mal alineado y enviar a revisión humana las traducciones de baja confianza.
 
 ### ¿Cómo funciona la evaluación de adecuación y fluidez?
 Con dos escalas independientes de 5 puntos. La adecuación mide cuánto significado se conserva y la fluidez, la gramática, la naturalidad y el estilo. Su problema es la varianza entre anotadores.
 
-### ¿Cómo se convierte una evaluación por pares en un ranking de sistemas?
-Con modelos como TrueSkill o Bradley-Terry, que convierten las preferencias A contra B en un ranking global. No dan una calidad absoluta.
-
 ### ¿Qué es la evaluación directa (DA)?
 Una escala continua de 0 a 100, estándar en la campaña de evaluación WMT desde 2017. La puntuación bruta $x$ de cada anotador se normaliza con $z = (x - \mu)/\sigma$, donde $\mu$ y $\sigma$ son su media y su desviación típica, para quitar su sesgo de escala.
-
-### ¿Qué diferencia hay entre la DA bilingüe y la monolingüe?
-En la bilingüe el evaluador compara la traducción con la frase origen. En la monolingüe la compara con una referencia humana. COMET y BLEURT se entrenan para predecir la puntuación $z$.
 
 ### ¿Qué es MQM?
 Un protocolo de evaluación humana en el que el anotador identifica cada error, lo clasifica y le asigna una gravedad. Necesita traductores profesionales.
 
-### ¿Qué categorías de error tiene la taxonomía MQM?
-Precisión (mala traducción, omisión o adición, contenido sin traducir), fluidez y estilo (gramática, ortografía y puntuación, registro poco idiomático), terminología, y estilo y localización (tono, fechas, monedas, unidades).
-
 ### ¿Qué pesos tienen los errores en la puntuación MQM?
 Un error menor pesa 1, uno mayor 5 y uno crítico entre 10 y 25.
-
-### ¿Qué sesgo tienen los anotadores no profesionales frente a los profesionales?
-Sobrevaloran la fluidez y pueden dar una falsa paridad con la traducción humana. Con profesionales y MQM, la correlación de BLEU con las personas cae y la de COMET se mantiene.
-
-### ¿Con qué se mide el acuerdo entre anotadores?
-Con el alfa de Krippendorff y la kappa de Cohen.
-
-### ¿Qué ventaja tiene evaluar a nivel de documento?
-Permite juzgar la correferencia, los marcadores del discurso y la coherencia terminológica, que no se ven en una frase suelta.
 
 ### Problema: calcula $p_1$, $p_2$ y la penalización por brevedad
 Hipótesis «the cat sat on mat» y referencia «the cat sat on the mat».

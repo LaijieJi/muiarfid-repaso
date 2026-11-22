@@ -2,76 +2,40 @@
 
 ## 1. Qué es un agente
 
-### ¿Cómo define Wooldridge un agente?
-Un sistema informático capaz de actuar de forma autónoma en un entorno para alcanzar los objetivos que se le han delegado. Su ciclo es percibir, decidir y actuar.
+### Según Wooldridge, ¿qué es un agente?
+Un proceso computacional dirigido por objetivos y capaz de interactuar con su entorno de forma flexible y robusta. Dicho de otro modo, es un sistema informático que actúa de forma autónoma en un entorno para alcanzar los objetivos que se le han delegado. Su ciclo es percibir, decidir y actuar.
 
-### ¿Qué tres capacidades forman la flexibilidad de un agente según Wooldridge?
-Reactividad, proactividad y capacidad social. Con ellas el agente interactúa con su entorno de forma robusta para cumplir sus objetivos.
-
-### ¿Qué diferencia a un agente inteligente de un agente software cualquiera?
-Que funciona de forma fiable en un entorno que cambia deprisa y de forma impredecible.
-
-### ¿Por qué un termostato es un agente sin interés?
-Porque sus decisiones son triviales. Lo mismo pasa con el programa `biff` de UNIX, que avisa de que ha llegado correo.
-
-### ¿Qué es la reactividad de un agente?
-Responder a tiempo a los cambios del entorno.
+### ¿Qué significa que la interacción de un agente con su entorno sea flexible, según Wooldridge?
+Que el agente es reactivo (responde a tiempo a los cambios del entorno), proactivo (persigue sus objetivos con iniciativa) y social (interactúa con otros agentes). No significa recuperarse bien de los fallos ni comunicarse con agentes de otra arquitectura.
 
 ### ¿Qué es la proactividad de un agente?
-Generar y perseguir objetivos propios y reconocer oportunidades, sin limitarse a reaccionar a eventos.
+Generar y perseguir objetivos propios, tomando la iniciativa y reconociendo oportunidades, sin limitarse a reaccionar a eventos. Guiarse solo por eventos es ser reactivo. Explicar su conducta con creencias y deseos es lo propio de un sistema intencional, que es otra idea.
 
-### ¿Qué cuatro propiedades forman el concepto débil de agente?
-Autonomía, proactividad, reactividad y sociabilidad. Un agente siempre las tiene.
+### ¿Qué cuatro propiedades forman el concepto débil de agente y cuáles añade el concepto fuerte?
+El concepto débil son autonomía, proactividad, reactividad y sociabilidad, y un agente siempre las tiene. El fuerte añade movilidad, veracidad, benevolencia, racionalidad, y aprendizaje y adaptación, y un agente puede tenerlas o no.
 
-### ¿Qué propiedades añade el concepto fuerte de agente?
-Movilidad, veracidad, benevolencia, racionalidad, y aprendizaje y adaptación. Un agente puede tenerlas o no.
-
-### ¿Qué significan la veracidad y la benevolencia de un agente?
-Veracidad: no comunica información falsa a sabiendas. Benevolencia: no tiene objetivos contradictorios e intenta hacer lo que se le pide.
-
-### ¿Qué significa la racionalidad de un agente en el concepto fuerte?
-Que tiene objetivos concretos e intenta siempre alcanzarlos.
-
-### ¿Cómo describe Van Parunak a un agente?
-Como un objeto activo con piezas opcionales, igual que una navaja suiza: puede viajar, aprender, representar a una persona, planificar, negociar o comunicarse en un lenguaje de agentes, entre otras.
+### ¿Qué significan la veracidad, la benevolencia y la racionalidad de un agente?
+Veracidad: no comunica información falsa a sabiendas. Benevolencia: no tiene objetivos contradictorios e intenta hacer lo que se le pide. Racionalidad: tiene objetivos concretos e intenta siempre alcanzarlos.
 
 ### ¿Qué es un sistema intencional según Dennett?
-Un sistema cuyo comportamiento se explica atribuyéndole creencias y deseos.
+Un sistema cuyo comportamiento se puede predecir atribuyéndole creencias, deseos y perspicacia racional. No se define por la lista de intenciones que puede llegar a tener ni por un conjunto de planes que modelan su conducta.
 
 ### ¿Qué diferencia hay entre un sistema intencional de primer y de segundo orden?
 El de primer orden tiene creencias y deseos, pero no sobre creencias y deseos. El de segundo orden los tiene sobre los suyos y sobre los de otros, como «Juan cree que Lola cree que llueve».
 
-### Según McCarthy, ¿cuándo es más útil atribuir cualidades mentales a una máquina?
-Cuando no se conoce del todo su estructura. En una máquina de estructura conocida, como un termostato, atribuirlas es más sencillo, pero resulta menos útil.
-
-### ¿Qué diferencia hay entre la resolución distribuida de problemas y los SMA?
-En la resolución distribuida, los nodos tienen tareas y conducta fijas y el diseño se centra en el comportamiento global. En un SMA, los agentes son autónomos, tienen información incompleta y deciden dinámicamente qué hacer y quién lo hace, sin control global.
-
 ## 2. Entornos
 
-### ¿Cuándo es observable un entorno?
-Cuando el agente obtiene información completa, exacta y actualizada de su estado.
+### ¿Cuándo es accesible (observable) un entorno?
+Cuando los sensores del agente le dan información completa, exacta y actualizada del estado del entorno. Los entornos moderadamente complejos, como el mundo físico diario o Internet, son inaccesibles. No debe confundirse con un entorno estático, que es otra propiedad.
+
+### ¿Cuándo es estático un entorno?
+Cuando se puede asumir que solo cambia por las acciones del propio agente. Su contrario, el entorno dinámico, tiene otros procesos que provocan cambios fuera del control del agente.
 
 ### ¿Cuándo es determinista un entorno?
 Cuando cada acción tiene un único efecto garantizado.
 
 ### ¿Cuándo es episódico un entorno?
 Cuando la elección de la acción depende solo del episodio actual, sin tener en cuenta los anteriores.
-
-### ¿Cuándo es estático un entorno?
-Cuando solo cambia por las acciones del propio agente.
-
-### ¿Cuándo es discreto un entorno?
-Cuando hay un número fijo y finito de acciones y percepciones.
-
-### ¿Cómo es el mundo real según las seis propiedades de los entornos?
-Parcialmente observable, estocástico, secuencial, dinámico, continuo y multiagente. Es el caso más difícil en las seis.
-
-### ¿Cómo clasifica el tema el entorno de la compra por Internet?
-No observable, parcialmente determinista, secuencial, semiestático y discreto.
-
-### ¿Cómo clasifica el tema el entorno del backgammon?
-Observable, no determinista, secuencial, semiestático, discreto y multiagente.
 
 ### Problema: clasifica el entorno de un crucigrama
 Un agente resuelve un crucigrama en papel. Clasifícalo según las seis propiedades.
@@ -87,38 +51,23 @@ Estático: nada cambia salvo lo que escribe el agente. Discreto: hay casillas y 
 ### ¿Qué diferencia hay entre un agente reactivo puro y uno reactivo con estado?
 El puro va directamente de la percepción a la acción, sin historia. El que tiene estado guarda la secuencia de percepciones como estado interno y decide con ella, aunque tampoco planifica.
 
-### ¿Qué tipo de reglas usa un agente reactivo?
-Reglas situación-acción: en un bucle, interpreta la percepción, busca la regla que corresponde y ejecuta su acción.
-
-### ¿Qué es una conducta en la formalización de la arquitectura reactiva?
-Un par $(c, a)$, donde $c$ es un conjunto de percepciones y $a$ una acción. La conducta se dispara cuando la percepción actual pertenece a $c$.
+### ¿Qué es un comportamiento (conducta) en la arquitectura de subsunción?
+Un par $(c, a)$, es decir, una condición y una acción. La condición $c$ es un conjunto de percepciones, y el comportamiento se dispara cuando la percepción actual pertenece a $c$. Es una regla condición-acción, no una intención como las de un agente BDI.
 
 ### ¿Qué acción elige el algoritmo de selección de la arquitectura reactiva?
 La de una conducta disparada a la que no inhibe ninguna otra conducta disparada. Si no hay ninguna, no hace nada.
 
 ### En la arquitectura de subsunción, ¿qué capas inhiben a cuáles?
-Las capas bajas, las más básicas, inhiben a las altas. Por ejemplo, evitar un obstáculo tiene prioridad sobre explorar.
+Las capas bajas, las más básicas, inhiben a las altas, que son más abstractas. Por ejemplo, evitar un obstáculo tiene prioridad sobre explorar. Una capa social al tope es propia de las arquitecturas híbridas, no de la subsunción.
 
 ### ¿Qué diferencia hay entre suprimir e inhibir en la subsunción de Brooks?
 Un nodo supresor actúa sobre las entradas de un módulo. Un nodo inhibidor actúa sobre sus salidas.
 
 ### ¿Cuál es la tesis de Brooks sobre la inteligencia?
-Que el comportamiento inteligente se puede generar sin un modelo simbólico del mundo y que la inteligencia es una propiedad emergente de sistemas complejos.
+Que el comportamiento inteligente se puede generar sin el razonamiento simbólico explícito de la IA clásica y sin un modelo simbólico del mundo. Es producto de la interacción con el entorno y emerge de comportamientos simples, de modo que la inteligencia es una propiedad emergente de sistemas complejos. Por eso los agentes reactivos no se basan en dividir el conocimiento en creencias, deseos e intenciones, que es la idea de un sistema intencional.
 
-### ¿Cómo se comunican los robots de Steels que recogen piedras?
-A través del entorno, sin comunicación directa. Siguen el gradiente de la señal de la nave nodriza y dejan y recogen partículas radiactivas que marcan el camino.
-
-### En los robots de Steels, ¿por qué un robot cargado echa dos partículas y uno sin carga recoge una?
-Para que el rastro hacia las piedras se refuerce mientras haya robots que lo recorren cargados y desaparezca cuando se agota la fuente.
-
-### ¿Qué estudia la simulación MANTA?
-La emergencia del reparto de trabajo en una colonia de hormigas. Cada tarea tiene un peso, un umbral y un nivel de activación, y las tareas compiten entre sí. A nivel de sistema surgen especializaciones.
-
-### ¿Qué ventajas tienen las arquitecturas reactivas?
-Respuesta inmediata, sin problema de representación simbólica, sencillez, robustez y tolerancia a fallos.
-
-### ¿Qué inconvenientes tienen las arquitecturas reactivas?
-Les cuesta aprender de la experiencia, solo usan información local y a corto plazo, las interacciones entre muchas conductas son difíciles de entender y no hay metodología: se diseñan por prueba y error.
+### ¿Qué ventajas e inconvenientes tienen las arquitecturas reactivas?
+Ventajas: respuesta inmediata, sin problema de representación simbólica, sencillez, robustez y tolerancia a fallos. Inconvenientes: les cuesta aprender de la experiencia, solo usan información local y a corto plazo, las interacciones entre muchas conductas son difíciles de entender y no hay metodología, así que se diseñan por prueba y error.
 
 ### Problema: aplica el algoritmo de selección de la arquitectura reactiva
 Conductas: $b_1$ (batería baja: volver a la base), $b_2$ (obstáculo delante: girar) y $b_3$ (siempre: explorar). Inhibición: $b_1 <_r b_2$ y $b_2 <_r b_3$, y la relación es transitiva, donde $b_i <_r b_j$ significa que $b_i$ inhibe a $b_j$. ¿Qué hace el agente si percibe un obstáculo con batería normal, y si percibe un obstáculo con la batería baja?
@@ -138,36 +87,36 @@ Tiene un modelo simbólico explícito del mundo y decide mediante razonamiento l
 La deliberación, que decide qué objetivos perseguir, y el razonamiento de medios y fines, que decide cómo alcanzarlos.
 
 ### ¿Qué son las creencias, los deseos y las intenciones en un agente BDI?
-Las creencias son el conocimiento del agente sobre el entorno. Los deseos son sus metas. Las intenciones son los deseos a los que se compromete: dirigen sus acciones hacia las metas, persisten y influyen en las creencias.
+Las creencias son el conocimiento del agente sobre el entorno. Los deseos son sus metas. Las intenciones son los deseos a los que se compromete: dirigen el razonamiento de medios y fines, restringen las deliberaciones futuras, persisten en el tiempo e influyen en las creencias.
 
-### ¿Qué funciones cumplen las intenciones en un agente BDI?
-Dirigen el razonamiento de medios y fines, restringen las deliberaciones futuras, persisten en el tiempo e influyen en las creencias del razonamiento posterior.
+### ¿Qué produce el proceso de deliberación de un agente BDI?
+Intenciones. La deliberación decide qué objetivos perseguir, y la función `Filtro` elige las intenciones a partir de creencias, deseos e intenciones previas. Las creencias salen de la revisión con la percepción (`Brf`) y los deseos de la generación de opciones.
+
+### ¿Qué funciones cumplen `Brf`, `Opciones`, `Filtro` y `Ejecutar` en la formalización BDI?
+`Brf` revisa las creencias con la percepción. `Opciones` genera deseos a partir de creencias e intenciones. `Filtro` elige las intenciones a partir de creencias, deseos e intenciones. `Ejecutar` elige la acción a partir de las intenciones.
 
 ### ¿En qué tres casos abandona un agente BDI una intención?
 Porque ya la ha alcanzado, porque no la va a poder alcanzar o porque ha desaparecido la razón por la que la tenía.
 
-### ¿Qué hacen las funciones `Brf`, `Opciones`, `Filtro` y `Ejecutar` de la formalización BDI?
-`Brf` revisa las creencias con la percepción. `Opciones` genera deseos a partir de creencias e intenciones. `Filtro` elige las intenciones a partir de creencias, deseos e intenciones. `Ejecutar` elige la acción a partir de las intenciones.
+### ¿Qué tipos de compromiso con una intención distingue el razonamiento práctico?
+| Compromiso | Mantiene la intención hasta que |
+|---|---|
+| Ciego (también llamado fanático) | crea que la ha logrado |
+| De mente cerrada (el «inquebrantable» de los exámenes) | crea que la ha logrado o que ya no es posible lograrla |
+| De mente abierta | crea que la ha logrado o deje de ser uno de sus objetivos |
 
-### ¿Qué estructura construye la generación de opciones en un agente BDI?
-Una jerarquía de planes: en cada paso se generan intenciones más concretas hasta llegar a acciones ejecutables.
+La frase «hasta creer que se ha logrado o que es imposible» describe el de mente cerrada, no el ciego. Las transparencias no definen estos tipos: la tabla es la de Rao y Georgeff y la de Wooldridge. En los exámenes de AIN, el compromiso «inquebrantable» es el que se mantiene hasta creer que la intención se ha logrado o que ya no es posible, y ciego y fanático se dan por iguales.
 
-### ¿Qué sistemas y autores están en el origen de la arquitectura BDI?
-IRMA (Bratman, 1988) como precursor, PRS (Georgeff y Lansky, 1987) como sistema, y las lógicas BDI de Rao y Georgeff.
+### En un agente BDI, ¿en qué se diferencian el compromiso ciego y el fanático, y qué estrategia es la del compromiso inquebrantable?
+El ciego y el fanático no se diferencian: son el mismo y mantienen la intención hasta creer que la han logrado. El compromiso inquebrantable es otro: mantiene la intención hasta creer que la ha logrado o que ya no es posible lograrla (es el de mente cerrada). La opción «mientras la crea posible» es un distractor.
 
 ## 5. Arquitecturas híbridas
 
 ### ¿Qué combina una arquitectura híbrida?
 Un subsistema deliberativo, con modelo simbólico y planes, y otro reactivo, para los estímulos que no necesitan deliberar. Se organiza en capas.
 
-### ¿Qué ventaja y qué inconveniente tienen las arquitecturas híbridas en conjunto?
-Ventaja: equilibran bien las conductas del agente, como la reactividad y la iniciativa. Inconveniente: falta de claridad conceptual y semántica, y hay muchas combinaciones de interacción entre capas.
-
-### ¿Cuántas pasadas puede tener una arquitectura de capas verticales?
-Una o dos. En una pasada el control va de la capa de percepción a la de acción. En dos, sube y vuelve a bajar.
-
 ### ¿Qué diferencia hay entre las capas horizontales y las verticales de una arquitectura híbrida?
-En las horizontales todas las capas están conectadas a sensores y actuadores y cada una sugiere acciones. En las verticales solo una capa tiene entrada y salida, y cada capa pasa el control a la siguiente.
+En las horizontales todas las capas están conectadas a sensores y actuadores y cada una sugiere acciones. En las verticales solo una capa tiene entrada y salida, y el control pasa de una capa a la siguiente en una pasada o en dos. En una horizontal nunca es una sola capa la que conecta con los sensores y los actuadores.
 
 ### ¿Qué ventaja e inconveniente tienen las capas horizontales?
 Ventaja: simplicidad conceptual, una capa por comportamiento. Inconveniente: el comportamiento global puede ser incoherente y hace falta una función mediadora, que se convierte en cuello de botella.
@@ -175,16 +124,13 @@ Ventaja: simplicidad conceptual, una capa por comportamiento. Inconveniente: el 
 ### ¿Qué ventaja e inconveniente tienen las capas verticales?
 Ventaja: menos interacciones entre capas. Inconveniente: para decidir hay que pasar por todas las capas, así que el fallo de una rompe el agente.
 
-### ¿Qué tres capas tiene InterRaP?
-Comportamiento (reactiva, con la información del entorno), planificación (proactiva, con los planes del agente) y cooperación (social, con los planes de otros agentes). Su base de conocimiento también se organiza en esas tres capas.
+### ¿Qué estructura tiene InterRaP?
+Es vertical, con tres capas y dos pasadas: la activación sube y la ejecución baja. Las capas son comportamiento (reactiva, con la información del entorno), planificación (proactiva, con los planes del agente) y cooperación (social, con los planes de otros agentes). Su base de conocimiento también está en tres capas. No hay función mediadora que elija la capa, porque eso es propio de las horizontales.
 
-### Cita ejemplos de arquitecturas híbridas.
-InterRaP, AuRA, RAP y Touring Machines.
+### ¿Qué tipo de capas tienen las Touring Machines y en qué se distinguen de InterRaP?
+Son un ejemplo de arquitectura horizontal, con tres capas (reactiva, de planificación y de modelado) que reciben la percepción y proponen acciones, y un subsistema de control que decide cuál actúa. InterRaP, en cambio, es vertical y no tiene ese control.
 
 ## 6. Jason
-
-### ¿Qué es Jason?
-Un intérprete de una extensión de AgentSpeak, un lenguaje para agentes BDI. Es de código abierto y funciona sobre varias infraestructuras.
 
 ### ¿Qué eventos disparadores existen en Jason?
 `+L` y `-L` añaden o borran una creencia. `+!L` y `-!L` añaden o borran un objetivo de logro. `+?L` y `-?L` añaden o borran un objetivo de prueba.
@@ -199,37 +145,28 @@ Un plan es relevante si su evento disparador unifica con el evento. Es aplicable
 `!g` suspende el plan hasta lograr `g`. `!!g` lanza el objetivo y el plan sigue sin esperar.
 
 ### ¿Qué son las notas mentales en Jason?
-Cambios en las creencias desde el cuerpo de un plan: `+b` añade, `-b` borra y `-+b` modifica.
+Cambios en las creencias desde el cuerpo de un plan: `+b` añade, `-b` borra y `-+b` modifica. Las creencias creadas así llevan la anotación `source(self)`.
 
 ### ¿Qué son las acciones internas en Jason?
-Acciones que empiezan por un punto, como `.print` o `.send`, y que no modifican el entorno.
+Acciones que empiezan por un punto, como `.print`, `.send`, `.nth` o `.at`, y que no modifican el entorno. Las acciones del entorno no llevan punto.
 
-### ¿Por qué falla un plan en Jason?
-Porque no hay planes relevantes o aplicables para un objetivo de logro, porque falla un objetivo de prueba o porque falla una acción.
+### ¿Por qué falla un plan en Jason y qué ocurre cuando falla un objetivo `g`?
+Falla si no hay planes relevantes o aplicables para un objetivo de logro, si falla un objetivo de prueba o si falla una acción. Entonces se genera el evento `-!g`. Si hay un plan para él, se ejecuta encima de la intención que falló. Si no, el fallo sube al objetivo padre.
 
-### ¿Qué ocurre en Jason cuando falla un objetivo `g`?
-Se genera el evento `-!g`. Si hay un plan para él, se ejecuta encima de la intención que falló. Si no lo hay, el fallo sube al objetivo padre.
+### En Jason, ¿qué hace el objetivo de prueba `?pos(X,Y,Z)` y en qué se diferencia de `!pos(X,Y,Z)` y de `+pos(X,Y,Z)`?
+Consulta la base de creencias y, si hay una creencia `pos` que unifica, instancia X, Y y Z con sus valores. No crea ninguna creencia, que es lo que hace `+pos(...)` en el cuerpo de un plan, y tampoco lanza un plan, a diferencia del objetivo de logro `!pos(...)`, que expresa un estado que se quiere conseguir. Si ninguna creencia unifica, el objetivo falla.
 
-### ¿Por qué se ejecuta un plan `+inicio` si `inicio.` es una creencia inicial?
-Porque las creencias iniciales generan su evento de adición al arrancar el agente.
+### En Jason, ¿qué valores puede tomar la anotación `source` de una creencia?
+`source(percept)` si viene de la percepción del entorno, `source(self)` si es una nota mental del propio agente y `source(nombre_del_agente)` si se la comunicó otro agente. Un identificador de conversación o el nombre de un plan no son fuentes válidas. La misma anotación sirve en un evento, como en `+!order(P)[source(Ag)]`, para saber quién lo envió.
 
-### ¿Qué partes tiene un plan de Jason?
-Una cabeza y un cuerpo. La cabeza es el evento disparador más un contexto, que son literales que deben ser consecuencia lógica de las creencias. El cuerpo es una secuencia de acciones y subobjetivos.
+### ¿Qué hace `.send(r, tell, c)` en Jason y qué cambia con `achieve`?
+El primer argumento es el receptor, el segundo la fuerza ilocutoria y el tercero el contenido. Con `tell`, el receptor añade a sus creencias el literal `c` con la anotación `source(emisor)`. Con `achieve`, recibe `c` como objetivo, de modo que el emisor le delega esa meta. `order` no es una de las fuerzas ilocutorias de Jason.
 
-### En Jason, ¿qué diferencia hay entre un objetivo de logro y uno de prueba?
-El de logro (`!g`) expresa un estado del mundo que el agente quiere conseguir. El de prueba (`?g`) se usa normalmente para recuperar información de la base de creencias.
+### En Jason, ¿qué hace la acción interna `.nth(1, L, T)`?
+Toma la lista `L` y unifica `T` con su elemento de posición 1. La lista es el segundo argumento y el resultado, el tercero. Los índices empiezan en 0, de modo que con `L = [a,b,c,d]` la llamada `.nth(2, L, X)` deja `X = c`.
 
-### ¿Qué significan `source(percept)` y `source(self)` en una creencia de Jason?
-`source(percept)` marca lo percibido del entorno. `source(self)` marca lo que el propio agente se ha dicho con una nota mental. Si viene de otro agente, la anotación lleva su nombre.
-
-### ¿Qué hace `.send(robot, achieve, g)` en Jason?
-Delega en el agente `robot` el objetivo `g`. Con `tell` en lugar de `achieve`, le informaría de una creencia.
-
-### ¿Para qué sirve la anotación `[source(Ag)]` en un evento disparador de Jason?
-Para saber de qué agente viene una creencia u objetivo y filtrar de quién se acepta.
-
-### En Jason, ¿cómo se unifica la lista `[1,2,3]` con `[H|T]`?
-`H = 1` y `T = [2,3]`.
+### En Jason, ¿qué hace la acción interna `.at("now +1 m", {+!g})`?
+Programa un evento: pasado un minuto desde ahora se genera el evento `+!g`, que dispara los planes relevantes para ese objetivo. El primer argumento es el momento y el segundo, el evento entre llaves. No crea ninguna creencia ni ejecuta un plan por su cuenta.
 
 ### Problema: traza un programa de Jason con recursión por creencias
 Creencia inicial `suma(0,0).` y planes `+suma(X,S) : X < 4 <- +suma(X+1, S+X+1).` y `+suma(X,S) : X = 4 <- .print("suma 4 == ", S).` ¿Qué escribe y qué creencias `suma` quedan al final?
@@ -257,3 +194,19 @@ Ningún plan borra creencias, así que al final hay cinco: de `suma(0,0)` a `sum
 No hay plan para `-!c`, así que el fallo sube a `b`. Para `-!b` sí hay plan, que escribe `recupero b`.
 #### Paso 3
 El plan de `b` quedó abortado, así que nunca escribe `fin b`. Tras tratar el fallo, el plan padre continúa y escribe `fin a`.
+
+### Problema: usa un objetivo de prueba de Jason sobre una creencia que existe y otra que no
+```
+temp(21)[source(percept)].
+!revisar.
++!revisar <- ?temp(T); .print("temperatura ", T); ?humedad(H); .print("humedad ", H).
+```
+No hay ningún plan para `+?humedad(H)`. ¿Qué escribe el agente y qué evento se genera al final?
+#### Paso 1
+`?temp(T)` consulta la base de creencias, encuentra `temp(21)` y unifica `T = 21`. La anotación `source(percept)` no impide la unificación y no se crea ninguna creencia.
+#### Paso 2
+Se escribe `temperatura 21`.
+#### Paso 3
+`?humedad(H)` no encuentra ninguna creencia que unifique y no hay plan que la resuelva, así que el objetivo de prueba falla y con él el plan de `!revisar`.
+#### Paso 4
+Nunca se escribe `humedad`. Se genera el evento `-!revisar`, y como no hay plan para él, el objetivo queda fallido.

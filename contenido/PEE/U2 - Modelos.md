@@ -11,26 +11,8 @@ Elegir la hipótesis más probable dada la observación: $\hat{y} = f(x) = \arg\
 ### ¿Por qué en un modelo generativo basta maximizar $P(x \mid y)\,P(y)$ y no hace falta $P(x)$?
 Porque $P(y \mid x) = P(x, y)/P(x)$ y el denominador $P(x)$ no depende de $y$. Maximizar sobre $y$ da el mismo resultado con o sin él.
 
-### ¿Cuáles son los tres componentes de un sistema de predicción estructurada estadística?
-El modelo estadístico, que sustituye a las distribuciones reales desconocidas. La regla de decisión o búsqueda (decodificación), que a veces es difícil. El criterio de entrenamiento, que estima los parámetros $\theta$ a partir de datos. Los algoritmos concretos dependen del modelo elegido.
-
-### ¿Qué tres fuentes de incertidumbre justifican un enfoque estadístico en predicción estructurada?
-Fragilidad, por una representación imperfecta de las entradas. Ambigüedad, porque varias interpretaciones son plausibles. Incompletitud, porque el conocimiento disponible para construir el modelo es insuficiente.
-
 ### ¿Qué tres condiciones cumple un lenguaje probabilístico $(L, \phi)$?
 Si $x \notin L$ entonces $\phi(x) = 0$. Si $x \in L$ entonces $0 < \phi(x) \le 1$. Y la suma $\sum_{x \in L} \phi(x)$ vale 1.
-
-### ¿Por qué $\phi(a^n b^n) = \frac{1}{e \cdot n!}$ define un lenguaje probabilístico sobre $L = \{a^n b^n \mid n \ge 0\}$?
-Porque cada cadena de $L$ recibe probabilidad positiva y la suma es $\frac{1}{e}\sum_{n \ge 0} \frac{1}{n!} = \frac{1}{e}\cdot e = 1$.
-
-### ¿Qué afirma el teorema de Wetherell sobre un lenguaje probabilístico infinito?
-Que para todo $\epsilon > 0$ existe una longitud $n$ tal que toda cadena con $|x| \ge n$ tiene probabilidad menor que $\epsilon$. Dicho de otro modo, las cadenas largas acaban teniendo probabilidad tan pequeña como se quiera.
-
-### ¿Qué modelos de la asignatura son generativos y cuáles discriminativos en predicción estructurada?
-| Tipo | Modelos |
-|---|---|
-| Generativos | autómatas finitos probabilísticos, HMM, PCFG |
-| Discriminativos | CRF, perceptrón estructurado, SVM estructurada, redes recurrentes codificador-decodificador |
 
 ### ¿Qué modelos de predicción no estructurada son generativos y cuáles discriminativos?
 Es generativo Naive Bayes. Son discriminativos la regresión logística, el perceptrón, las SVM y las redes neuronales. En predicción estructurada los equivalentes son PFSA, HMM y PCFG (generativos) y CRF, perceptrón estructurado, SVM estructurada y redes recurrentes codificador-decodificador (discriminativos).
@@ -43,9 +25,6 @@ Una tupla $A = (\Sigma, Q, \delta, I, F, P)$: alfabeto, estados, transiciones, p
 ### ¿Qué condiciones de normalización debe cumplir un PFSA?
 Las probabilidades iniciales suman 1: $\sum_q I(q) = 1$. Y para cada estado, su probabilidad final más las de todas sus transiciones salientes suman 1: $F(q) + \sum_{a, q'} P(q, a, q') = 1$.
 
-### ¿Por qué la probabilidad final $F(q)$ cuenta como una salida más del estado?
-Porque parar en $q$ es una de las opciones que tiene el autómata al llegar a él. Si no se contara, las probabilidades de continuar sumarían 1 y el autómata nunca terminaría.
-
 ### ¿Cómo se calcula la probabilidad de aceptar una cadena $x$ por un camino concreto $\pi$ en un PFSA?
 Se multiplica la probabilidad inicial del primer estado, las probabilidades de las transiciones del camino y la probabilidad final del último estado: $P_A(x, \pi) = I(s_0)\prod_{i} P(s_{i-1}, x_i, s_i)\,F(s_k)$.
 
@@ -54,9 +33,6 @@ Sumando sobre todos los caminos que aceptan la cadena: $P_A(x) = \sum_{\pi \in \
 
 ### ¿En qué se diferencian la probabilidad de una cadena y la probabilidad de su mejor camino en un PFSA?
 La de la cadena suma las probabilidades de todos los caminos y la del mejor camino toma solo el máximo: $\hat{P}_A(x) = \max_\pi P_A(x, \pi)$. Por tanto, $\hat{P}_A(x) \le P_A(x)$, con igualdad solo si hay un único camino con probabilidad positiva.
-
-### ¿Cuándo es consistente un PFSA y qué condición suficiente da el tema?
-Es consistente si $\sum_{x \in L(A)} P_A(x) = 1$. La condición suficiente que se da es que todos sus estados sean útiles, es decir, que cada estado aparezca en al menos un camino válido.
 
 ### ¿Qué lenguaje acepta un PFSA?
 El de las cadenas con probabilidad positiva: $L(A) = \{x \mid P_A(x) > 0\}$.
@@ -112,23 +88,11 @@ Para cada no terminal $A_i$, las probabilidades de todas las reglas con $A_i$ en
 ### ¿Cómo se calcula la probabilidad de un árbol de análisis en una PCFG?
 Como el producto de las probabilidades de las reglas usadas: $P_\theta(x, t_x) = \prod_j P(r_j)$. Si una regla se usa varias veces, su probabilidad se multiplica una vez por cada uso.
 
-### ¿Qué restricción se impone para que la probabilidad de una derivación sea un simple producto de reglas?
-Que la probabilidad de cada regla no dependa de las reglas anteriores: $P(r_j \mid r_1 \cdots r_{j-1}) = P(r_j)$. Sin ella habría que calcular probabilidades condicionadas a toda la historia, lo que no es manejable.
-
 ### ¿Cómo se calculan en una PCFG la probabilidad de una cadena y la de su mejor árbol?
 La de la cadena suma los árboles que la generan, $P_\theta(x) = \sum_{t_x} P_\theta(x, t_x)$, y la del mejor árbol toma el máximo, $\max_{t_x} P_\theta(x, t_x)$. Es la misma pareja suma y máximo que en los PFSA.
 
-### ¿Por qué una cadena ambigua tiene más de una probabilidad de árbol en una PCFG?
-Porque la gramática puede darle varios árboles distintos y cada uno tiene su propio producto de reglas. La probabilidad de la cadena es la suma de todos y el análisis elegido es el de mayor probabilidad.
-
-### En la PCFG de las transparencias, ¿cuánto vale la probabilidad de «astronomers saw stars with telescopes» y cómo sale de sus dos árboles?
-Se suman las probabilidades de los dos árboles, $P_\theta(x)=0{,}504\cdot10^{-3}+0{,}378\cdot10^{-3}=0{,}882\cdot10^{-3}$. En el primero «with telescopes» cuelga del sintagma nominal «stars» y en el segundo del sintagma verbal. El mejor análisis es el primero, el de mayor probabilidad.
-
 ### ¿Cuándo es consistente una PCFG?
 Cuando las probabilidades de todas las cadenas del lenguaje suman 1: $\sum_{x \in L(G)} P_\theta(x) = 1$. Si suman menos, la gramática pierde masa de probabilidad y no define una distribución completa.
-
-### ¿Qué afirma el teorema de Booth y Thompson sobre las PCFG?
-Que existen lenguajes probabilísticos que ninguna PCFG puede generar. Un ejemplo es $\phi(a^n b^n) = \frac{1}{e \cdot n!}$: no existe ninguna $G_\theta$ con $P_\theta(x) = \phi(x)$ para todo $x \in L$.
 
 ### Problema: probabilidad de los árboles y de la cadena en una PCFG ambigua
 La PCFG tiene las reglas $S \to NP\ VP$ (1), $VP \to V\ NP$ (0,6), $VP \to VP\ PP$ (0,4), $NP \to NP\ PP$ (0,3), $NP \to n$ (0,7), $PP \to P\ NP$ (1), $V \to v$ (1) y $P \to p$ (1). Calcula la probabilidad de cada árbol de la cadena $n\,v\,n\,p\,n$, la de la cadena y cuál es el mejor árbol.
@@ -154,23 +118,11 @@ Con $p = 0{,}4$ y $q = 0{,}6$: $0{,}4\,t^2 - t + 0{,}6 = 0$, con raíces $t = \f
 
 ## 2.3 Modelos gráficos probabilísticos: redes bayesianas
 
-### ¿Qué ventajas dan los modelos gráficos probabilísticos?
-Representan de forma compacta una distribución conjunta mediante un grafo, combinando probabilidad y teoría de grafos. Separan las relaciones de independencia condicional entre variables de los detalles de su forma paramétrica. Además generalizan modelos como las redes neuronales y los HMM.
-
-### ¿Qué representan los nodos y el grafo en un modelo gráfico probabilístico?
-Los nodos son variables aleatorias. El grafo expresa un conjunto de independencias y factoriza la distribución conjunta.
-
-### ¿Qué dos familias de modelos gráficos se distinguen según el tipo de grafo?
-Las redes bayesianas, basadas en grafos dirigidos, y los campos aleatorios de Markov, basados en grafos no dirigidos.
-
 ### ¿Qué es una red bayesiana?
 Un modelo gráfico que representa un conjunto de variables aleatorias y sus dependencias condicionales mediante un grafo dirigido acíclico (DAG). Los nodos son variables y las aristas son dependencias estadísticas.
 
 ### ¿Cómo factoriza una red bayesiana la distribución conjunta?
 Como el producto de cada variable condicionada a sus padres en el grafo: $p(x_1, \dots, x_T) = \prod_{t=1}^{T} p(x_t \mid \phi(x_t))$, donde $\phi(x_t)$ son las dependencias asociadas al nodo $x_t$.
-
-### ¿Cuántos parámetros necesitan los dos casos extremos de red bayesiana con $T$ variables binarias?
-Sin ninguna independencia (cada variable depende de todas las anteriores) hacen falta $2^T - 1$ parámetros. Con independencia total, $p(x_1)\cdots p(x_T)$, hacen falta solo $T$. Las redes reales quedan entre ambos extremos.
 
 ### Si $p(A, B, C, D, E) = p(A)\,p(B)\,p(C \mid A, B)\,p(D \mid B, C)\,p(E \mid C, D)$, ¿qué padres tiene cada nodo?
 $A$ y $B$ no tienen padres. $C$ tiene a $A$ y $B$. $D$ tiene a $B$ y $C$. $E$ tiene a $C$ y $D$.
@@ -185,12 +137,6 @@ Son independientes si $p(a, b) = p(a)\,p(b)$, o equivalentemente $p(a \mid b) = 
 | Cola a cola (padre común) | $a \leftarrow c \to b$ | no | sí |
 | Cabeza a cabeza (estructura en V) | $a \to c \leftarrow b$ | sí | no |
 
-### En la cadena $a \to c \to b$, ¿por qué $a$ y $b$ son independientes dado $c$ pero no sin condicionar?
-Dado $c$: $P(a, b \mid c) = P(a)P(c \mid a)P(b \mid c)/P(c) = P(a \mid c)\,P(b \mid c)$. Sin condicionar, $P(a, b) \ne P(a)\,P(b)$ porque $a$ influye en $b$ a través de $c$.
-
-### En el padre común $a \leftarrow c \to b$, ¿por qué observar $c$ vuelve independientes a $a$ y $b$?
-Porque $P(a, b \mid c) = P(c)P(a \mid c)P(b \mid c)/P(c) = P(a \mid c)\,P(b \mid c)$. Sin observar $c$, ambas variables comparten una causa y están correlacionadas, así que $P(a, b) \ne P(a)\,P(b)$.
-
 ### En la estructura en V $a \to c \leftarrow b$, ¿por qué $a$ y $b$ son independientes sin condicionar?
 Porque al sumar sobre $c$ se obtiene $P(a, b) = \sum_c P(a)\,P(b)\,P(c \mid a, b) = P(a)\,P(b)$, ya que $\sum_c P(c \mid a, b) = 1$. Ninguna de las dos es causa de la otra.
 
@@ -200,17 +146,11 @@ Que $a$ y $b$ dejan de ser independientes: $P(a, b \mid c) \ne P(a \mid c)\,P(b 
 ### ¿Qué calcula la inferencia en una red bayesiana?
 La probabilidad posterior de una variable $x$ dada una evidencia $y$, sin importar el valor de las demás variables $z$: $P(x \mid y) = P(x, y)/P(y)$, con $P(x, y) = \sum_z P(x, y, z)$ y $P(y) = \sum_{x, z} P(x, y, z)$.
 
-### ¿Qué diferencia hay entre usar una red bayesiana para predicción y para diagnóstico?
-En predicción se calcula la probabilidad de observar un síntoma sabiendo que hay una enfermedad. En diagnóstico se calcula la probabilidad de una enfermedad dados los síntomas observados.
-
 ### ¿Cómo factoriza una red bayesiana el clasificador Naive Bayes?
 Como $p(x_1, \dots, x_T, y) = p(y)\prod_{t=1}^{T} p(x_t \mid y)$. La suposición es que, conocida la clase $y$, todas las características son independientes entre sí.
 
 ### ¿Cómo se escribe un HMM de bigramas como red bayesiana?
 Con una cadena de estados ocultos $y_t$ y una observación $x_t$ colgando de cada uno: $P(x_1^T, y_1^T) = \prod_{t=1}^{T} q(y_t \mid y_{t-1})\,e(x_t \mid y_t)$. Una cadena de Markov simple es el caso sin observaciones, $p(x_1)\prod_t p(x_t \mid x_{t-1})$.
-
-### ¿Cómo encaja una PCFG como red bayesiana?
-Cada nodo del árbol es una variable y la probabilidad de cada paso de la derivación es la de una regla: $P(r_i) = P(Y_j Y_k \mid Y_i)$ para una regla binaria o $P(X_l \mid Y_i)$ para una regla léxica. La conjunta es el producto de esas probabilidades.
 
 ### Problema: factorización y número de parámetros de una red en diamante
 Una red bayesiana con variables binarias tiene las aristas $A \to B$, $A \to C$, $B \to D$ y $C \to D$. Escribe la factorización, cuenta los parámetros y decide cuáles de estas independencias son ciertas: (i) $B \perp C \mid A$, (ii) $B \perp C \mid \{A, D\}$, (iii) $A \perp D \mid \{B, C\}$, (iv) $A \perp D \mid B$.
@@ -247,9 +187,6 @@ $P(G = w) = 0{,}0175 + 0{,}28 + 0{,}189 + 0{,}0285 = 0{,}515$. Las que tienen $R
 
 ## 2.3 Modelos gráficos probabilísticos: campos aleatorios de Markov
 
-### ¿Por qué se introducen los campos aleatorios de Markov (MRF) si ya existen las redes bayesianas?
-Porque las redes bayesianas no pueden representar perfectamente todas las distribuciones. Los MRF usan grafos no dirigidos y son más potentes, aunque más difíciles de tratar computacionalmente.
-
 ### ¿Qué representan los nodos y las aristas de un MRF?
 Los nodos son variables aleatorias. Las aristas indican qué variables interaccionan probabilísticamente con sus vecinas, o sea, de cuáles depende cada una.
 
@@ -259,17 +196,11 @@ Por separación en el grafo: $A \perp B \mid C$ si y solo si el conjunto $C$ sep
 ### ¿Qué es un clique y qué es un clique maximal en un grafo no dirigido?
 Un clique es un subgrafo completamente conectado, donde todos los nodos están unidos entre sí. Un clique maximal es un clique que no está contenido en ningún otro clique mayor.
 
-### En un grafo con aristas $\{1,2\}$, $\{1,3\}$, $\{2,3\}$ y $\{3,4\}$, ¿cuáles son los cliques maximales?
-$\{1, 2, 3\}$ y $\{3, 4\}$. El conjunto $\{1, 2\}$ es un clique, pero no maximal, porque está contenido en $\{1, 2, 3\}$. El conjunto $\{1, 2, 3, 4\}$ no es un clique porque faltan las aristas de 4 con 1 y 2.
-
 ### ¿Cómo factoriza un MRF la distribución conjunta?
 Como $P_G(X_1, \dots, X_T) = \frac{1}{Z}\prod_{C \in Q}\psi_C(V_C)$, donde $Q$ es el conjunto de cliques maximales, $V_C$ las variables del clique $C$ y $\psi_C > 0$ su función de potencial.
 
 ### ¿Para qué sirve la constante $Z$ en un MRF y cómo se calcula?
 Para normalizar: los potenciales son positivos pero no son probabilidades. Se calcula sumando el producto de potenciales sobre todas las asignaciones posibles: $Z = \sum_{X_1, \dots, X_T}\prod_C \psi_C(V_C)$. Esa suma es lo costoso de los MRF.
-
-### ¿Qué es la función de energía de un MRF y qué relación tiene con los potenciales?
-Se escribe cada potencial como $\psi_C = \exp(-E_C)$. Entonces $P_G = \frac{1}{Z}\exp\left(-\sum_C E_C(V_C)\right)$. Con funciones lineales generalizadas, $E_C(V_C) = -\sum_k \theta_{C,k}\,f_{C,k}(V_C)$.
 
 ### Problema: factorización por cliques y constante $Z$ de un MRF pequeño
 Un MRF binario tiene las aristas $\{X_1, X_2\}$, $\{X_1, X_3\}$, $\{X_2, X_3\}$ y $\{X_3, X_4\}$. Sea $\psi_1(X_1, X_2, X_3) = 2$ si las tres variables son iguales y 1 en otro caso, y $\psi_2(X_3, X_4) = 3$ si $X_3 = X_4$ y 1 en otro caso. Escribe la factorización, calcula $Z$, $P(0, 0, 0, 0)$ y $P(X_3 = X_4)$, e indica qué separa a $X_4$ del resto.
@@ -296,12 +227,6 @@ Suma $\exp\{\varphi(x, y'; \theta)\}$ sobre todas las secuencias de salida posib
 ### ¿Cómo se factoriza la función de compatibilidad de un CRF de bigramas?
 Como suma sobre las posiciones de un producto de pesos por características: $\varphi(x, y; \theta) = \sum_{t=1}^{T}\sum_{k=1}^{K}\theta_k\,f_k(y_{t-1}, y_t, x_t)$, con $y_0 = \text{null}$ para que el bigrama esté definido en $t = 1$.
 
-### ¿Por qué la factorización en bigramas permite algoritmos eficientes en un CRF?
-Porque dos secuencias $y \ne y'$ que comparten bigramas comparten también esas puntuaciones. Así se pueden reutilizar cálculos parciales, como en un trellis.
-
-### ¿Por qué se dice que un CRF es un modelo log-lineal?
-Porque el logaritmo de su probabilidad, salvo la constante $\log Z$, es una combinación lineal de las características: $\sum_t \sum_k \theta_k f_k$. Las características $f$ vienen dadas por el problema y los parámetros del modelo son los pesos $\theta \in \mathbb{R}^K$.
-
 ### ¿Cuáles son los tres problemas que se plantean en un CRF?
 Inferencia: calcular $p(y \mid x; \theta)$ de una secuencia dada. Decodificación: hallar la mejor secuencia $\arg\max_y p(y \mid x; \theta)$. Estimación de parámetros: aprender $\theta$ a partir de pares $(x^{(n)}, y^{(n)})$.
 
@@ -313,12 +238,6 @@ El HMM es generativo y modela $P(x, y)$ con transiciones y emisiones normalizada
 
 ### ¿Qué son las características de etiqueta con etiqueta (label-label) en un CRF de reconocimiento de entidades?
 Indicadoras binarias $f^{LL}_{ij}(y_{t-1}, y_t, x_t)$ que valen 1 si $y_{t-1} = i$ e $y_t = j$ y 0 en otro caso. Con 9 etiquetas hay $9 \cdot 9 = 81$ características de este tipo.
-
-### ¿Qué son las características de etiqueta con palabra (label-word)?
-Indicadoras $f^{LW}_{iv}$ que valen 1 si $y_t = i$ y $x_t = v$, para cada etiqueta $i$ y cada palabra $v$ del vocabulario. Con 9 etiquetas y 21 249 palabras hay $9 \cdot 21\,249 = 191\,241$.
-
-### ¿Qué son las características de etiqueta con observación (label-observation)?
-Indicadoras $f^{LO}_{ib}$ que valen 1 si $y_t = i$ y se cumple una función binaria $g_b(x_t)$ sobre la palabra, por ejemplo que empiece por mayúscula. Estas funciones se definen heurísticamente según la tarea.
 
 ### Problema: probabilidad de una secuencia y decodificación en un CRF con características
 Un CRF etiqueta la frase $x = (\text{dogs}, \text{run})$ con etiquetas $\{N, V\}$ y $y_0 = \text{null}$. Los pesos distintos de cero son: etiqueta-etiqueta $\theta(\text{null}, N) = 0{,}5$, $\theta(N, V) = 1$, $\theta(V, N) = 0{,}5$, $\theta(V, V) = -1$. Etiqueta-palabra $\theta(N, \text{dogs}) = 2$, $\theta(V, \text{run}) = 1{,}5$, $\theta(N, \text{run}) = 0{,}5$. Calcula $p(NV \mid x)$ y la mejor secuencia.
